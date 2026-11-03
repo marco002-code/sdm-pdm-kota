@@ -106,8 +106,8 @@ Masuk ke direktori aplikasi Laravel Anda:
 ```bash
 cd /home/<user>/web/<domain>/app  # (Atau public_html jika Opsi B)
 
-# 1. Salin template .env.beta
-cp .env.beta .env
+# 1. Salin template lingkungan dari .env.example (atau .env.beta jika ada)
+if [ -f .env.beta ]; then cp .env.beta .env; else cp .env.example .env; fi
 
 # 2. Edit konfigurasi .env
 nano .env
@@ -126,7 +126,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=adminmlc_sdm_db
 DB_USERNAME=adminmlc_sdm
-DB_PASSWORD="UGyIWd@Dbx7Qad5r"
+DB_PASSWORD="<masukkan_password_database_anda>"
 
 QUEUE_CONNECTION=database
 SESSION_DRIVER=file

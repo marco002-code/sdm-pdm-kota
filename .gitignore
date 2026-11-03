@@ -18,17 +18,35 @@
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 /vendor
+
+# Lingkungan & Kredensial Rahasia
 .env
-.env.backup
-.env.production
-.env.staging
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
+.env.*
+!.env.example
+
+# Basis Data Lokal & Temporary SQLite
+*.sqlite
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+
+# Berkas Draft, Bahan Pengembangan & Catatan Internal Lokal
+bahan_dasar.md
+bahan_pengembangan/
+rancangan_sdm_pdm_kota.md
+update.txt
+scratch/
+
+# Testing & Logs
+.phpunit.result.cache
+*.log
+npm-debug.log
+yarn-error.log
+
+# Editor & System Files
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+Homestead.json
+Homestead.yaml

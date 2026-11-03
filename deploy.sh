@@ -92,11 +92,13 @@ fi
 # 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
 # ------------------------------------------------------------------------------
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template .env.beta...${NC}"
+    echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template...${NC}"
     if [ -f .env.beta ]; then
         cp .env.beta .env
+        echo -e "${GREEN}✔ Berkas .env dibuat dari .env.beta.${NC}"
     elif [ -f .env.example ]; then
         cp .env.example .env
+        echo -e "${GREEN}✔ Berkas .env dibuat dari .env.example.${NC}"
     fi
 fi
 

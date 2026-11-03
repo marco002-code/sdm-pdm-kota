@@ -41,9 +41,9 @@ git clone <URL_REPOSITORY> .
 ```
 
 ### Langkah 2.2: Konfigurasi File Environment (.env)
-Gunakan template `.env.beta` yang telah disiapkan:
+Gunakan template `.env.example` yang telah disiapkan:
 ```bash
-cp .env.beta .env
+cp .env.example .env
 nano .env
 ```
 Sesuaikan parameter penting berikut:
