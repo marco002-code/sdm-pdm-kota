@@ -48,29 +48,39 @@ apt update && apt install -y php8.2-sqlite3 php8.2-gd php8.2-curl php8.2-zip php
 
 ## 4. Menghubungkan Nginx HestiaCP ke Folder `public` Laravel
 
-Laravel mengharuskan web server membaca folder `public/`, bukan root proyek. Anda dapat memilih salah satu dari dua cara berikut:
+Laravel mengharuskan web server membaca folder `public/`, bukan root proyek. Anda dapat memilih salah satu cara berikut:
 
-### OPSI A (Paling Mudah & Praktis - Menggunakan Symlink):
-*Metode ini tidak memerlukan akses root dan tidak mengubah template sistem HestiaCP.*
+### OPSI A (Rekomendasi Utama: Custom Document Root di HestiaCP)
+*Letakkan seluruh proyek langsung di `public_html/`, lalu arahkan server ke folder `public` via menu HestiaCP.*
 
-Login via SSH sebagai user HestiaCP (misal user `admin` atau `sdmpdm`):
+1. **Clone Langsung ke `public_html`**:
+   ```bash
+   cd ~/web/sdm-pdm.muhijunior.id/public_html
+   
+   # Hapus file index.html bawaan HestiaCP jika masih ada
+   rm -rf *
+   
+   # Clone repositori langsung ke folder ini (perhatikan tanda titik '.' di akhir perintah)
+   git clone https://github.com/marco002-code/sdm-pdm-kota.git .
+   ```
+2. **Arahkan Document Root di Panel HestiaCP**:
+   - Buka Panel HestiaCP -> Menu **WEB** -> Edit domain `sdm-pdm.muhijunior.id`.
+   - Buka **Advanced Options**.
+   - Centang **Custom document root**.
+   - Masukkan / pilih direktori: `public_html/public`.
+   - Klik **Save**. Web server otomatis membaca folder `public` Laravel!
+
+---
+
+### OPSI B (Metode Symlink public_html -> app/public):
+*Jika tidak menggunakan fitur Custom Document Root di panel HestiaCP:*
+
 ```bash
-# Ganti <user> dan <domain> sesuai data Anda
-USER="admin"
-DOMAIN="sdm.pdmkotayogya.or.id"
-
-cd /home/$USER/web/$DOMAIN/
-
-# 1. Clone source code repositori ke folder aplikasi
-git clone https://github.com/marco002-code/sdm-pdm-kota.git app
-
-# 2. Hapus folder public_html default bawaan HestiaCP (hanya berisi file index dummy)
+cd ~/web/sdm-pdm.muhijunior.id
 rm -rf public_html
-
-# 3. Buat symlink dari app/public ke public_html
+git clone https://github.com/marco002-code/sdm-pdm-kota.git app
 ln -s app/public public_html
 ```
-*Dengan metode ini, HestiaCP tetap membaca `public_html`, namun isinya langsung mengarah ke `app/public` milik Laravel.*
 
 ---
 
