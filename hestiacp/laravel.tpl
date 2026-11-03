@@ -1,0 +1,63 @@
+#=========================================================================#
+# HestiaCP Nginx PHP-FPM Template untuk Laravel (HTTP Port 80)           #
+# Simpan di: /usr/local/hestia/data/templates/web/nginx/php-fpm/laravel.tpl
+#=========================================================================#
+
+server {
+    listen      %ip%:%port%;
+    server_name %domain_idn% %alias_idn%;
+    root        %docroot%/public;
+    index       index.php index.html index.htm;
+    access_log  /var/log/nginx/domains/%domain%.log combined;
+    access_log  /var/log/nginx/domains/%domain%.bytes bytes;
+    error_log   /var/log/nginx/domains/%domain%.error.log error;
+
+    client_max_body_size 25M;
+
+    # Header Keamanan
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Kompresi Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass    %fastcgi_pass%;
+        fastcgi_index   index.php;
+        fastcgi_param   SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include         /etc/nginx/fastcgi_params;
+
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+        fastcgi_read_timeout 120s;
+    }
+
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        access_log off;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+        return 404;
+    }
+
+    location ~* \.(sqlite|sqlite3|db)$ {
+        deny all;
+        return 404;
+    }
+
+    include %home%/%user%/conf/web/%domain%/nginx.conf_*;
+}
