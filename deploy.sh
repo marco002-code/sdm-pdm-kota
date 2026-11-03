@@ -72,7 +72,24 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 2. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
+# 2. Validasi Direktori Proyek & Keberadaan Berkas 'artisan'
+# ------------------------------------------------------------------------------
+if [ ! -f "$PROJECT_DIR/artisan" ]; then
+    echo -e "${RED}❌ Berkas 'artisan' tidak ditemukan di: $PROJECT_DIR${NC}"
+    FOUND_ARTISAN=$(find "$PROJECT_DIR" -maxdepth 2 -name "artisan" 2>/dev/null | head -n 1)
+    if [ -n "$FOUND_ARTISAN" ]; then
+        SUGGESTED_DIR="$(dirname "$FOUND_ARTISAN")"
+        echo -e "${YELLOW}💡 Ditemukan berkas 'artisan' di subfolder: ${GREEN}$SUGGESTED_DIR${NC}"
+        echo -e "${YELLOW}👉 Silakan masuk ke subfolder tersebut dan jalankan deploy:${NC}"
+        echo -e "    cd $SUGGESTED_DIR && ./deploy.sh"
+    else
+        echo -e "${YELLOW}💡 Pastikan seluruh berkas repositori (termasuk berkas 'artisan') telah di-clone/disalin ke direktori ini.${NC}"
+    fi
+    exit 1
+fi
+
+# ------------------------------------------------------------------------------
+# 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
 # ------------------------------------------------------------------------------
 if [ ! -f .env ]; then
     echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template .env.beta...${NC}"
