@@ -89,7 +89,7 @@ if [ ! -f "$PROJECT_DIR/artisan" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
+# 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada atau perlu konfigurasi MySQL)
 # ------------------------------------------------------------------------------
 if [ ! -f .env ]; then
     echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template .env.beta...${NC}"
@@ -100,6 +100,42 @@ if [ ! -f .env ]; then
     fi
     echo -e "${YELLOW}🔑 Menghasilkan APP_KEY unik...${NC}"
     $PHP_BIN artisan key:generate --force
+fi
+
+# Pastikan kredensial basis data MySQL produksi (adminmlc_sdm_db) disinkronkan ke .env
+if [ -f .env ] && grep -q "DB_CONNECTION=sqlite" .env 2>/dev/null; then
+    echo -e "${YELLOW}🔄 Mengalihkan konfigurasi basis data .env ke MySQL (adminmlc_sdm_db)...${NC}"
+    sed -i 's/^DB_CONNECTION=sqlite/DB_CONNECTION=mysql/' .env
+    
+    if grep -q "^DB_DATABASE=" .env; then
+        sed -i 's|^DB_DATABASE=.*|DB_DATABASE=adminmlc_sdm_db|' .env
+    else
+        echo "DB_DATABASE=adminmlc_sdm_db" >> .env
+    fi
+    
+    if grep -q "^DB_USERNAME=" .env; then
+        sed -i 's/^DB_USERNAME=.*/DB_USERNAME=adminmlc_sdm/' .env
+    else
+        echo "DB_USERNAME=adminmlc_sdm" >> .env
+    fi
+    
+    if grep -q "^DB_PASSWORD=" .env; then
+        sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD="UGyIWd@Dbx7Qad5r"|' .env
+    else
+        echo 'DB_PASSWORD="UGyIWd@Dbx7Qad5r"' >> .env
+    fi
+    
+    if grep -q "^DB_HOST=" .env; then
+        sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+    else
+        echo "DB_HOST=127.0.0.1" >> .env
+    fi
+    
+    if grep -q "^DB_PORT=" .env; then
+        sed -i 's/^DB_PORT=.*/DB_PORT=3306/' .env
+    else
+        echo "DB_PORT=3306" >> .env
+    fi
 fi
 
 # Pastikan seluruh struktur folder storage tersedia

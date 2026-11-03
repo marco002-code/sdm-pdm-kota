@@ -108,15 +108,15 @@ Sesuaikan baris-baris berikut:
 APP_NAME="SIM SDM PDM Kota Yogyakarta"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://sdm.pdmkotayogya.or.id
+APP_URL=https://sdm-pdm.muhijunior.id
 
-# Sesuaikan path absolut database SQLite ke direktori HestiaCP Anda
-DB_CONNECTION=sqlite
-DB_DATABASE=/home/<user>/web/<domain>/app/database/database.sqlite
-DB_BUSY_TIMEOUT=60000
-DB_JOURNAL_MODE=WAL
-DB_SYNCHRONOUS=NORMAL
-DB_TRANSACTION_MODE=IMMEDIATE
+# Konfigurasi Basis Data MySQL HestiaCP
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=adminmlc_sdm_db
+DB_USERNAME=adminmlc_sdm
+DB_PASSWORD="UGyIWd@Dbx7Qad5r"
 
 QUEUE_CONNECTION=database
 SESSION_DRIVER=file
