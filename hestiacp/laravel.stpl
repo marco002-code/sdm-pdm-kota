@@ -66,3 +66,4 @@ server {
 
     include %home%/%user%/conf/web/%domain%/nginx.ssl.conf_*;
 }
+

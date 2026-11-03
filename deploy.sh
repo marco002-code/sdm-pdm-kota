@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# SKRIP AUTOMATISASI DEPLOYMENT VERSI BETA / PRODUCTION
-# SIM SDM PDM KOTA YOGYAKARTA
+# SKRIP AUTOMATISASI DEPLOYMENT RESILIEN VERSI BETA / PRODUCTION
+# SIM SDM PDM KOTA YOGYAKARTA (Debian, Nginx, HestiaCP & Linux Server)
 # ==============================================================================
 set -e
 
@@ -12,14 +12,92 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_DIR"
+
+# Trap handler: Memberi instruksi pemulihan jika terjadi error di tengah proses
+cleanup() {
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo -e "\n${RED}======================================================================${NC}"
+        echo -e "${RED}❌ DEPLOYMENT TERHENTI DENGAN KESALAHAN (Exit Code: $exit_code)${NC}"
+        echo -e "${YELLOW}ℹ️  Aplikasi kemungkinan masih dalam Mode Pemeliharaan (Maintenance Mode).${NC}"
+        echo -e "${YELLOW}ℹ️  Jalankan perintah berikut untuk mengaktifkan kembali aplikasi:${NC}"
+        echo -e "    ${GREEN}$PHP_BIN artisan up${NC}"
+        echo -e "${RED}======================================================================${NC}"
+    fi
+}
+trap cleanup EXIT
+
 echo -e "${BLUE}======================================================================${NC}"
 echo -e "${BLUE}🚀 MEMULAI PROSES DEPLOYMENT SIM SDM PDM KOTA YOGYAKARTA${NC}"
 echo -e "${BLUE}======================================================================${NC}"
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$PROJECT_DIR"
+# ------------------------------------------------------------------------------
+# 1. Deteksi & Validasi PHP Binary (Multi-PHP Support di HestiaCP / Debian)
+# ------------------------------------------------------------------------------
+if [ -z "$PHP_BIN" ]; then
+    if command -v php &> /dev/null && php -r "exit(version_compare(PHP_VERSION, '8.2.0', '>=') ? 0 : 1);" 2>/dev/null; then
+        PHP_BIN="php"
+    elif command -v php8.2 &> /dev/null && php8.2 -r "exit(version_compare(PHP_VERSION, '8.2.0', '>=') ? 0 : 1);" 2>/dev/null; then
+        PHP_BIN="php8.2"
+    elif command -v php8.3 &> /dev/null && php8.3 -r "exit(version_compare(PHP_VERSION, '8.2.0', '>=') ? 0 : 1);" 2>/dev/null; then
+        PHP_BIN="php8.3"
+    elif command -v php8.4 &> /dev/null; then
+        PHP_BIN="php8.4"
+    else
+        PHP_BIN="php"
+    fi
+fi
 
-# 1. Backup Database Sebelum Update
+PHP_VER=$($PHP_BIN -r "echo PHP_VERSION;" 2>/dev/null || echo "0")
+echo -e "${YELLOW}🐘 Menggunakan PHP Binary: ${GREEN}$PHP_BIN${NC} (Versi: ${GREEN}$PHP_VER${NC})"
+
+if ! $PHP_BIN -r "exit(version_compare(PHP_VERSION, '8.2.0', '>=') ? 0 : 1);" 2>/dev/null; then
+    echo -e "${RED}❌ PHP version ($PHP_VER) tidak memenuhi syarat minimum (>= 8.2).${NC}"
+    echo -e "${YELLOW}ℹ️  Anda dapat menentukan binary PHP secara spesifik, contoh:${NC}"
+    echo -e "    PHP_BIN=php8.2 ./deploy.sh"
+    exit 1
+fi
+
+# Deteksi Composer
+if command -v composer &> /dev/null; then
+    COMPOSER_CMD="composer"
+elif [ -f "$PROJECT_DIR/composer.phar" ]; then
+    COMPOSER_CMD="$PHP_BIN $PROJECT_DIR/composer.phar"
+elif [ -f "/usr/local/bin/composer" ]; then
+    COMPOSER_CMD="/usr/local/bin/composer"
+else
+    COMPOSER_CMD="composer"
+fi
+
+# ------------------------------------------------------------------------------
+# 2. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
+# ------------------------------------------------------------------------------
+if [ ! -f .env ]; then
+    echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template .env.beta...${NC}"
+    if [ -f .env.beta ]; then
+        cp .env.beta .env
+    elif [ -f .env.example ]; then
+        cp .env.example .env
+    fi
+    echo -e "${YELLOW}🔑 Menghasilkan APP_KEY unik...${NC}"
+    $PHP_BIN artisan key:generate --force
+fi
+
+# Pastikan seluruh struktur folder storage tersedia
+mkdir -p storage/app/public \
+         storage/framework/cache/data \
+         storage/framework/sessions \
+         storage/framework/views \
+         storage/logs \
+         storage/backups \
+         bootstrap/cache \
+         database
+
+# ------------------------------------------------------------------------------
+# 3. Pencadangan (Backup) Otomatis Basis Data Sebelum Pembaruan
+# ------------------------------------------------------------------------------
 if [ -f "$PROJECT_DIR/backup.sh" ]; then
     echo -e "${YELLOW}📦 [1/8] Menjalankan pencadangan (backup) otomatis...${NC}"
     bash "$PROJECT_DIR/backup.sh" || echo -e "${YELLOW}⚠️ Backup dilewati/gagal, melanjutkan deploy...${NC}"
@@ -27,54 +105,92 @@ else
     echo -e "${YELLOW}ℹ️  [1/8] Skrip backup tidak ditemukan, melanjutkan...${NC}"
 fi
 
-# 2. Aktifkan Maintenance Mode (Aplikasi aman dari interaksi user saat migrasi)
+# ------------------------------------------------------------------------------
+# 4. Aktifkan Maintenance Mode (Aman dari interaksi user saat migrasi)
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}🔒 [2/8] Mengaktifkan Mode Pemeliharaan (Maintenance Mode)...${NC}"
-php artisan down --retry=60 --secret="pdm-beta-bypass" || true
+$PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" || true
 
-# 3. Update Dependencies Composer (No Dev, Optimized)
+# ------------------------------------------------------------------------------
+# 5. Update Dependencies Composer (No-Dev, Optimize Autoloader)
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}📦 [3/8] Menginstal dependensi PHP (Composer Optimize)...${NC}"
-composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+$COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-req=php+
 
-# 4. Compile Frontend Assets (Vite)
+# ------------------------------------------------------------------------------
+# 6. Kompilasi Aset Frontend (Vite)
+# ------------------------------------------------------------------------------
 if command -v npm &> /dev/null; then
     echo -e "${YELLOW}🎨 [4/8] Mengompilasi aset frontend (Vite Build)...${NC}"
     npm run build
 else
-    echo -e "${YELLOW}ℹ️  [4/8] Node/NPM tidak terdeteksi di server; memastikan folder public/build tersedia...${NC}"
+    if [ -f "public/build/manifest.json" ]; then
+        echo -e "${GREEN}✔ [4/8] Node/NPM tidak terpasang di server, namun aset terkompilasi (public/build) siap digunakan.${NC}"
+    else
+        echo -e "${YELLOW}⚠️  [4/8] Aset frontend belum terkompilasi dan npm tidak ditemukan. Silakan jalankan 'npm run build' secara lokal lalu upload folder public/build.${NC}"
+    fi
 fi
 
-# 5. Eksekusi Migrasi Database (Force Flag untuk Lingkungan Production)
+# ------------------------------------------------------------------------------
+# 7. Eksekusi Migrasi Database & Seeder Otomatis jika Database Kosong
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}🗄️  [5/8] Menjalankan migrasi database...${NC}"
-php artisan migrate --force
+$PHP_BIN artisan migrate --force
 
-# 6. Pasang Symbolic Link Storage
+# Cek apakah master data unit kerja kosong; jika kosong, jalankan seeder otomatis
+UNITS_COUNT=$($PHP_BIN -r "
+    require __DIR__.'/vendor/autoload.php';
+    \$app = require_once __DIR__.'/bootstrap/app.php';
+    \$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    try {
+        echo \App\Models\Unit::count();
+    } catch (\Throwable \$e) {
+        echo '0';
+    }
+" 2>/dev/null || echo "0")
+
+if [ "$UNITS_COUNT" -eq "0" ]; then
+    echo -e "${YELLOW}🌱 Basis data masih kosong. Menjalankan seeder awal (76 Unit AUM & Akun)...${NC}"
+    $PHP_BIN artisan db:seed --force
+fi
+
+# ------------------------------------------------------------------------------
+# 8. Pasang Symbolic Link Storage
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}🔗 [6/8] Memeriksa storage symbolic link...${NC}"
-php artisan storage:link || true
+$PHP_BIN artisan storage:link || true
 
-# 7. Optimasi Framework Cache (Config, Route, View, Event)
+# ------------------------------------------------------------------------------
+# 9. Optimasi Framework Cache (Config, Route, View, Event)
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}⚡ [7/8] Mengoptimalkan cache sistem (Laravel Optimize)...${NC}"
-php artisan optimize:clear
-php artisan optimize
+$PHP_BIN artisan optimize:clear
+$PHP_BIN artisan optimize
 
 # Restart Antrian Latar Belakang (Queue Worker)
-php artisan queue:restart || true
+$PHP_BIN artisan queue:restart || true
 
-# 8. Setel Hak Akses / Permissions Direktori
+# ------------------------------------------------------------------------------
+# 10. Setel Hak Akses / Permissions Direktori
+# ------------------------------------------------------------------------------
 echo -e "${YELLOW}🛡️  [8/8] Memperbarui izin direktori (permissions)...${NC}"
 chmod -R 775 storage bootstrap/cache database 2>/dev/null || true
 if [ -f database/database.sqlite ]; then
     chmod 664 database/database.sqlite 2>/dev/null || true
 fi
 
-# Matikan Mode Pemeliharaan (Aplikasi Aktif Kembali)
+# ------------------------------------------------------------------------------
+# 11. Buka Kembali Aplikasi (Exit Maintenance Mode)
+# ------------------------------------------------------------------------------
 echo -e "${GREEN}🔓 Membuka kembali aplikasi ke publik...${NC}"
-php artisan up
+$PHP_BIN artisan up
 
-# Jalankan Pre-Flight Check untuk Memverifikasi Kesehatan Sistem
+# ------------------------------------------------------------------------------
+# 12. Jalankan Pre-Flight Check
+# ------------------------------------------------------------------------------
 echo -e "${BLUE}======================================================================${NC}"
-php artisan app:preflight
+$PHP_BIN artisan app:preflight
 
 echo -e "${GREEN}======================================================================${NC}"
-echo -e "${GREEN}✅ DEPLOYMENT VERSI BETA SELESAI DENGAN SUKSES!${NC}"
+echo -e "${GREEN}✅ DEPLOYMENT SIM SDM PDM KOTA YOGYAKARTA SELESAI DENGAN SUKSES!${NC}"
 echo -e "${GREEN}======================================================================${NC}"
-
