@@ -1,0 +1,29 @@
+# ==============================================================================
+# SYSTEMD SERVICE UNIT UNTUK BACKGROUND QUEUE WORKER
+# SIM SDM PDM KOTA YOGYAKARTA
+#
+# Lokasi penempatan di server: /etc/systemd/system/sdm-queue-worker.service
+# Perintah aktivasi:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now sdm-queue-worker
+#   sudo systemctl status sdm-queue-worker
+# ==============================================================================
+
+[Unit]
+Description=SIM SDM PDM Kota Yogyakarta - Background Queue Worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/sdm-pdm-kota
+ExecStart=/usr/bin/php /var/www/sdm-pdm-kota/artisan queue:work database --sleep=3 --tries=3 --max-time=3600 --timeout=90
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/sdm-pdm-kota/storage/logs/queue-worker.log
+StandardError=append:/var/www/sdm-pdm-kota/storage/logs/queue-worker-error.log
+
+[Install]
+WantedBy=multi-user.target
+
