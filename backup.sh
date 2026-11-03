@@ -13,8 +13,8 @@ mkdir -p "$BACKUP_DIR"
 
 echo "📦 Memulai backup basis data [Timestamp: $TIMESTAMP]..."
 
-# 1. Backup Basis Data MySQL (Jika .env menggunakan koneksi mysql)
-if [ -f "$PROJECT_DIR/.env" ] && grep -q "DB_CONNECTION=mysql" "$PROJECT_DIR/.env" 2>/dev/null; then
+# 1. Backup Basis Data MySQL (Jika .env menggunakan koneksi mysql aktif)
+if [ -f "$PROJECT_DIR/.env" ] && grep -q "^DB_CONNECTION=mysql" "$PROJECT_DIR/.env" 2>/dev/null; then
     DB_NAME=$(grep "^DB_DATABASE=" "$PROJECT_DIR/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ')
     DB_USER=$(grep "^DB_USERNAME=" "$PROJECT_DIR/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ')
     DB_PASS=$(grep "^DB_PASSWORD=" "$PROJECT_DIR/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ')

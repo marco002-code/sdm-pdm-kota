@@ -89,7 +89,7 @@ if [ ! -f "$PROJECT_DIR/artisan" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada atau perlu konfigurasi MySQL)
+# 3. Inisialisasi Lingkungan Awal (Self-Healing jika .env belum ada)
 # ------------------------------------------------------------------------------
 if [ ! -f .env ]; then
     echo -e "${YELLOW}⚠️  Berkas .env belum ditemukan. Menginisialisasi dari template .env.beta...${NC}"
@@ -97,44 +97,6 @@ if [ ! -f .env ]; then
         cp .env.beta .env
     elif [ -f .env.example ]; then
         cp .env.example .env
-    fi
-    echo -e "${YELLOW}🔑 Menghasilkan APP_KEY unik...${NC}"
-    $PHP_BIN artisan key:generate --force
-fi
-
-# Pastikan kredensial basis data MySQL produksi (adminmlc_sdm_db) disinkronkan ke .env
-if [ -f .env ] && grep -q "DB_CONNECTION=sqlite" .env 2>/dev/null; then
-    echo -e "${YELLOW}🔄 Mengalihkan konfigurasi basis data .env ke MySQL (adminmlc_sdm_db)...${NC}"
-    sed -i 's/^DB_CONNECTION=sqlite/DB_CONNECTION=mysql/' .env
-    
-    if grep -q "^DB_DATABASE=" .env; then
-        sed -i 's|^DB_DATABASE=.*|DB_DATABASE=adminmlc_sdm_db|' .env
-    else
-        echo "DB_DATABASE=adminmlc_sdm_db" >> .env
-    fi
-    
-    if grep -q "^DB_USERNAME=" .env; then
-        sed -i 's/^DB_USERNAME=.*/DB_USERNAME=adminmlc_sdm/' .env
-    else
-        echo "DB_USERNAME=adminmlc_sdm" >> .env
-    fi
-    
-    if grep -q "^DB_PASSWORD=" .env; then
-        sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD="UGyIWd@Dbx7Qad5r"|' .env
-    else
-        echo 'DB_PASSWORD="UGyIWd@Dbx7Qad5r"' >> .env
-    fi
-    
-    if grep -q "^DB_HOST=" .env; then
-        sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
-    else
-        echo "DB_HOST=127.0.0.1" >> .env
-    fi
-    
-    if grep -q "^DB_PORT=" .env; then
-        sed -i 's/^DB_PORT=.*/DB_PORT=3306/' .env
-    else
-        echo "DB_PORT=3306" >> .env
     fi
 fi
 
@@ -161,8 +123,10 @@ fi
 # ------------------------------------------------------------------------------
 # 4. Aktifkan Maintenance Mode (Aman dari interaksi user saat migrasi)
 # ------------------------------------------------------------------------------
-echo -e "${YELLOW}🔒 [2/8] Mengaktifkan Mode Pemeliharaan (Maintenance Mode)...${NC}"
-$PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" || true
+if [ -f "vendor/autoload.php" ]; then
+    echo -e "${YELLOW}🔒 [2/8] Mengaktifkan Mode Pemeliharaan (Maintenance Mode)...${NC}"
+    $PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" 2>/dev/null || true
+fi
 
 # ------------------------------------------------------------------------------
 # 5. Update Dependencies Composer (No-Dev, Optimize Autoloader)
@@ -170,18 +134,28 @@ $PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" || true
 echo -e "${YELLOW}📦 [3/8] Menginstal dependensi PHP (Composer Optimize)...${NC}"
 $COMPOSER_CMD install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-req=php+
 
+# Generate APP_KEY jika belum ada / masih kosong setelah composer selesai
+if grep -q "^APP_KEY=$" .env 2>/dev/null || grep -q "^APP_KEY=\"\"$" .env 2>/dev/null || ! grep -q "^APP_KEY=" .env 2>/dev/null; then
+    echo -e "${YELLOW}🔑 Menghasilkan APP_KEY unik...${NC}"
+    $PHP_BIN artisan key:generate --force
+fi
+
 # ------------------------------------------------------------------------------
-# 6. Kompilasi Aset Frontend (Vite)
+# 6. Verifikasi & Penyediaan Aset Frontend
 # ------------------------------------------------------------------------------
-if command -v npm &> /dev/null; then
+if [ -f "public/build/manifest.json" ]; then
+    echo -e "${GREEN}✔ [4/8] Aset frontend produksi (public/build) telah tersedia dan siap digunakan.${NC}"
+elif command -v npm &> /dev/null && [ -f "node_modules/.bin/vite" ]; then
     echo -e "${YELLOW}🎨 [4/8] Mengompilasi aset frontend (Vite Build)...${NC}"
-    npm run build
-else
-    if [ -f "public/build/manifest.json" ]; then
-        echo -e "${GREEN}✔ [4/8] Node/NPM tidak terpasang di server, namun aset terkompilasi (public/build) siap digunakan.${NC}"
-    else
-        echo -e "${YELLOW}⚠️  [4/8] Aset frontend belum terkompilasi dan npm tidak ditemukan. Silakan jalankan 'npm run build' secara lokal lalu upload folder public/build.${NC}"
+    npm run build || true
+elif command -v npm &> /dev/null && [ -f "package.json" ]; then
+    echo -e "${YELLOW}🎨 [4/8] Menginstal dependensi frontend & mengompilasi aset (Vite)...${NC}"
+    npm ci --prefer-offline 2>/dev/null || npm install --no-audit --no-fund 2>/dev/null || true
+    if [ -f "node_modules/.bin/vite" ]; then
+        npm run build || true
     fi
+else
+    echo -e "${YELLOW}⚠️  [4/8] Aset frontend belum terkompilasi. Silakan jalankan 'npm run build' secara lokal dan upload folder public/build.${NC}"
 fi
 
 # ------------------------------------------------------------------------------
