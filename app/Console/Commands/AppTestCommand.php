@@ -853,7 +853,8 @@ class AppTestCommand extends Command
         $this->assert('Admin Utama dapat mengakses Halaman Pemeliharaan Sistem (HTTP 200)', $resAdminMaint->getStatusCode() === 200);
         $this->assert('Halaman memuat judul Pemeliharaan Sistem & Status Maintenance', str_contains($htmlAdminMaint, 'Pemeliharaan Sistem & Status Maintenance'));
         $this->assert('Halaman memuat diagnosa Versi PHP dan Laravel', str_contains($htmlAdminMaint, 'Versi PHP:') && str_contains($htmlAdminMaint, 'Versi Laravel:'));
-        $this->assert('Halaman memuat info Kapasitas Disk Server', str_contains($htmlAdminMaint, 'Kapasitas Disk Server'));
+        $this->assert('Card Basis Data dan Kapasitas Disk Server telah dihapus dari tampilan', !str_contains($htmlAdminMaint, 'Kapasitas Disk Server') && !str_contains($htmlAdminMaint, 'Basis Data (Database)'));
+        $this->assert('Card Lingkungan Aplikasi dan Cadangan & Log tetap ditampilkan', str_contains($htmlAdminMaint, 'Lingkungan Aplikasi') && str_contains($htmlAdminMaint, 'Cadangan & Log'));
         $this->assert('Halaman memuat panel Alat Pemeliharaan & Operasi Cepat', str_contains($htmlAdminMaint, 'Alat Pemeliharaan & Operasi Cepat'));
         $this->assert('Halaman memuat konsol Cuplikan Log Sistem', str_contains($htmlAdminMaint, 'Cuplikan Log Sistem'));
 

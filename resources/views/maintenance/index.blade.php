@@ -114,7 +114,7 @@
     </div>
 
     <!-- 2. GRID INFORMASI DIAGNOSTIK SISTEM -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- 1. Lingkungan & Server -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -141,55 +141,7 @@
                     <span class="text-slate-500">Debug Mode:</span>
                     <span class="font-semibold {{ $systemInfo['app_debug'] ? 'text-amber-600' : 'text-slate-700' }}">{{ $systemInfo['app_debug'] ? 'Aktif (True)' : 'Nonaktif (False)' }}</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- 2. Basis Data -->
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
-                    Basis Data (Database)
-                </span>
-                <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-blue-100 text-blue-800">{{ $dbStatus['driver'] }}</span>
-            </div>
-            <div class="mt-2.5 space-y-1.5 text-xs">
                 <div class="flex justify-between">
-                    <span class="text-slate-500">Nama DB:</span>
-                    <span class="font-semibold text-slate-800 font-mono truncate max-w-[130px]" title="{{ $dbStatus['name'] }}">{{ $dbStatus['name'] }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-slate-500">Ukuran DB:</span>
-                    <span class="font-semibold text-slate-800 font-mono">{{ $dbStatus['size'] }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-slate-500">Status Koneksi:</span>
-                    <span class="font-bold text-emerald-600 flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        {{ $dbStatus['status'] }}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Penyimpanan & Disk -->
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                    Kapasitas Disk Server
-                </span>
-                <span class="text-[10px] font-bold text-slate-500">{{ $storageInfo['usage_percent'] }}% Digunakan</span>
-            </div>
-            <div class="mt-2.5 space-y-1.5 text-xs">
-                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" style="width: {{ min(100, $storageInfo['usage_percent']) }}%"></div>
-                </div>
-                <div class="flex justify-between text-[11px] pt-1">
-                    <span class="text-slate-500">Sisa Bebas: <strong class="text-slate-700">{{ $storageInfo['free_space'] }}</strong></span>
-                    <span class="text-slate-500">Total: <strong class="text-slate-700">{{ $storageInfo['total_space'] }}</strong></span>
-                </div>
-                <div class="flex justify-between pt-0.5">
                     <span class="text-slate-500">Symlink Storage:</span>
                     <span class="font-bold {{ $systemInfo['storage_symlink'] ? 'text-emerald-600' : 'text-rose-600' }}">
                         {{ $systemInfo['storage_symlink'] ? 'Terhubung (OK)' : 'Belum Ada' }}
@@ -198,7 +150,7 @@
             </div>
         </div>
 
-        <!-- 4. Cadangan & Berkas Log -->
+        <!-- 2. Cadangan & Berkas Log -->
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -215,6 +167,10 @@
                 <div class="flex justify-between">
                     <span class="text-slate-500">Ukuran Log Sistem:</span>
                     <span class="font-semibold text-slate-800 font-mono">{{ $storageInfo['log_size'] }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Jumlah Berkas Cadangan:</span>
+                    <span class="font-semibold text-slate-800 font-mono">{{ $storageInfo['backup_count'] }} berkas</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-slate-500">Direktori Backup:</span>
