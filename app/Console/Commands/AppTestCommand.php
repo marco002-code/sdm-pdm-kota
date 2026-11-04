@@ -903,7 +903,15 @@ class AppTestCommand extends Command
         $resClearLog = $maintController->clearLog();
         $this->assert('Aksi Kosongkan Log Sistem berhasil dieksekusi (Redirect 302)', $resClearLog->isRedirect());
 
-        // 10. Pengujian Siklus Toggle Mode Pemeliharaan (Down -> Up)
+        // 10. Pengujian Siklus Toggle Mode Pemeliharaan (Down -> Up) & Halaman Pemberitahuan (503)
+        $view503Path = resource_path('views/errors/503.blade.php');
+        $this->assert('Berkas template pemberitahuan maintenance errors/503.blade.php tersedia', file_exists($view503Path));
+
+        $rendered503 = view('errors.503')->render();
+        $this->assert('Template 503 memuat identitas PDM Kota Yogyakarta', str_contains($rendered503, 'PDM Kota Yogyakarta') && str_contains($rendered503, 'Majelis Pendidikan Dasar Menengah & PNF'));
+        $this->assert('Template 503 memuat pesan pemeliharaan & kode HTTP 503', str_contains($rendered503, 'Pemeliharaan Berkala') && str_contains($rendered503, 'HTTP 503'));
+        $this->assert('Template 503 memuat tombol reload & kontak helpdesk IT Support', str_contains($rendered503, 'Muat Ulang Halaman') && str_contains($rendered503, 'Hubungi Helpdesk IT Support'));
+
         $reqDown = Request::create('/maintenance/toggle', 'POST', [
             'secret' => 'test-bypass-key-1234',
             'retry' => 120,
@@ -911,6 +919,10 @@ class AppTestCommand extends Command
         $resDown = $maintController->toggle($reqDown);
         $this->assert('Aktivasi Maintenance Mode via Controller berhasil (Redirect 302)', $resDown->isRedirect());
         $this->assert('Aplikasi terdeteksi isDownForMaintenance() TRUE', app()->isDownForMaintenance());
+
+        // Verifikasi bahwa Laravel down membuat file maintenance.php / down saat mode maintenance aktif
+        $maintenanceFile = storage_path('framework/down');
+        $this->assert('Berkas storage/framework/down terbuat saat mode maintenance aktif', file_exists($maintenanceFile));
 
         // Matikan kembali agar kembali daring (Live)
         $reqUp = Request::create('/maintenance/toggle', 'POST');

@@ -160,6 +160,7 @@ class MaintenanceController extends Controller
 
         $params = [
             '--secret' => $secret,
+            '--render' => 'errors.503',
         ];
 
         if (!empty($validated['retry'])) {
@@ -357,3 +358,4 @@ class MaintenanceController extends Controller
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }
+

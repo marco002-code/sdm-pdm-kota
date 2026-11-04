@@ -127,7 +127,7 @@ fi
 # ------------------------------------------------------------------------------
 if [ -f "vendor/autoload.php" ]; then
     echo -e "${YELLOW}🔒 [2/8] Mengaktifkan Mode Pemeliharaan (Maintenance Mode)...${NC}"
-    $PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" 2>/dev/null || true
+    $PHP_BIN artisan down --retry=60 --secret="pdm-beta-bypass" --render="errors.503" 2>/dev/null || true
 fi
 
 # ------------------------------------------------------------------------------
