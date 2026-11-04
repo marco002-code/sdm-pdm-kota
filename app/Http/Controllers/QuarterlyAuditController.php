@@ -20,6 +20,9 @@ class QuarterlyAuditController extends Controller
         $quarter = (int) $request->input('quarter', UnitUpdateAudit::getCurrentQuarter());
 
         $user = Auth::user();
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses pembaruan data berkala.');
+        }
 
         // Ambil semua unit sekolah aktif
         $unitsQuery = Unit::where('is_active', true)->where('level', '!=', 'YAYASAN');

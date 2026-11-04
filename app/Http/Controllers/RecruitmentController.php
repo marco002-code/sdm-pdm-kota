@@ -11,6 +11,10 @@ class RecruitmentController extends Controller
 {
     public function index(Request $request)
     {
+        if (! auth()->user()->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Modul Rekrutmen Pegawai hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
+
         $query = Recruitment::withCount(['applicants', 'applicants as passed_count' => function ($q) {
             $q->where('selection_status', 'lulus');
         }]);
@@ -38,6 +42,10 @@ class RecruitmentController extends Controller
 
     public function show($id, Request $request)
     {
+        if (! auth()->user()->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Modul Rekrutmen Pegawai hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
+
         $recruitment = Recruitment::with(['creator'])->findOrFail($id);
 
         $applicantQuery = $recruitment->applicants()->with(['preferredUnit', 'placedUnit']);

@@ -19,6 +19,10 @@ class EmployeeMutationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        if (! $user->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Modul Riwayat Mutasi hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
+
         $query = EmployeeMutation::with(['employee', 'originUnit', 'destinationUnit', 'approver']);
 
         if ($user->isUnitLevel() && $user->unit_id) {

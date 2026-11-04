@@ -17,6 +17,10 @@ class CoachingController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses modul pembinaan pegawai.');
+        }
+
         $query = EmployeeCoaching::with(['employee', 'unit', 'creator']);
 
         if ($user->isUnitLevel() && $user->unit_id) {

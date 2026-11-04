@@ -35,6 +35,7 @@ class AppTestCommand extends Command
         $this->testUnitMasterDataModule();
         $this->testPerformanceAppraisalModules();
         $this->testRolePrivilegesAndCapabilities();
+        $this->testDynamicSidebarVisibilityAndRoleIsolation();
         $this->testLogout();
 
         $this->newLine();
@@ -417,7 +418,7 @@ class AppTestCommand extends Command
 
         $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
 
-        // 1. Verifikasi Sidebar Navigasi: Menu DP3 & PKKS berada tepat di bawah Data Induk Pegawai untuk TU
+        // 1. Verifikasi Sidebar Navigasi: Menu DP3 tampil untuk TU, sedangkan PKKS disembunyikan dari TU
         $tu = User::where('email', 'tu.sd@sekolah.sch.id')->first();
         Auth::login($tu);
         $reqTuDash = Request::create('/dashboard', 'GET');
@@ -430,10 +431,16 @@ class AppTestCommand extends Command
         $posPkks = strpos($htmlTu, 'Input Nilai PKKS');
 
         $this->assert('Menu Input Nilai DP3 tampil di sidebar TU', $posDp3 !== false);
-        $this->assert('Menu Input Nilai PKKS tampil di sidebar TU', $posPkks !== false);
-        $this->assert('Urutan menu navigasi presisi: Data Induk Pegawai -> Input Nilai DP3 -> Input Nilai PKKS',
-            $posPegawai !== false && $posDp3 !== false && $posPkks !== false && $posPegawai < $posDp3 && $posDp3 < $posPkks
-        );
+        $this->assert('Menu Input Nilai PKKS disembunyikan dari sidebar TU', $posPkks === false);
+
+        // Verifikasi bahwa Menu PKKS tampil untuk Kepala Sekolah
+        $kepsek = User::where('role', User::ROLE_KEPSEK)->first();
+        Auth::login($kepsek);
+        $reqKepsekDash = Request::create('/dashboard', 'GET');
+        app()->instance('request', $reqKepsekDash);
+        $resKepsekDash = $kernel->handle($reqKepsekDash);
+        $htmlKepsek = $resKepsekDash->getContent();
+        $this->assert('Menu Input Nilai PKKS tampil di sidebar Kepala Sekolah', str_contains($htmlKepsek, 'Input Nilai PKKS'));
 
         // 2. Verifikasi Sidebar Navigasi: Menu disembunyikan untuk Pegawai biasa (ESS)
         $guru = User::where('email', 'rahmat.guru@sekolah.sch.id')->first();
@@ -458,16 +465,19 @@ class AppTestCommand extends Command
         $this->assert('Halaman DP3 memuat pegawai di unit sendiri (Rahmat Hidayat)', str_contains($contentTuDp3, 'Rahmat Hidayat'));
         $this->assert('Isolasi Domain: Halaman DP3 TU TIDAK memuat pegawai dari unit lain', !str_contains($contentTuDp3, 'Drs. H. Akhid'));
 
-        // 4. Akses Halaman Input Nilai PKKS oleh TU
+        // 4. Pembatasan PKKS: TU dilarang mengakses PKKS (HTTP 403), sedangkan Kepsek diizinkan (HTTP 200)
         $reqTuPkks = Request::create('/career/performance', 'GET', ['type' => 'pkks']);
         app()->instance('request', $reqTuPkks);
         $resTuPkks = $kernel->handle($reqTuPkks);
-        $contentTuPkks = $resTuPkks->getContent();
 
-        $this->assert('Halaman Input Nilai PKKS dapat diakses oleh TU Unit (HTTP 200)', $resTuPkks->getStatusCode() === 200);
-        $this->assert('Halaman PKKS memuat judul Input Nilai PKKS', str_contains($contentTuPkks, 'Input Nilai PKKS'));
-        $this->assert('Halaman PKKS memuat pegawai di unit sendiri (Rahmat Hidayat)', str_contains($contentTuPkks, 'Rahmat Hidayat'));
-        $this->assert('Isolasi Domain: Halaman PKKS TU TIDAK memuat pegawai dari unit lain', !str_contains($contentTuPkks, 'Drs. H. Akhid'));
+        $this->assert('Halaman Input Nilai PKKS DITOLAK untuk TU Unit (HTTP 403)', $resTuPkks->getStatusCode() === 403);
+
+        Auth::login($kepsek);
+        $reqKepsekPkks = Request::create('/career/performance', 'GET', ['type' => 'pkks']);
+        app()->instance('request', $reqKepsekPkks);
+        $resKepsekPkks = $kernel->handle($reqKepsekPkks);
+        $this->assert('Halaman Input Nilai PKKS dapat diakses oleh Kepala Sekolah (HTTP 200)', $resKepsekPkks->getStatusCode() === 200);
+        $this->assert('Halaman PKKS memuat judul Input Nilai PKKS', str_contains($resKepsekPkks->getContent(), 'Input Nilai PKKS'));
 
         // 5. Pembatasan Hak Akses Pegawai (ESS): Dilarang mengakses menu DP3 & PKKS (HTTP 403)
         Auth::login($guru);
@@ -650,6 +660,154 @@ class AppTestCommand extends Command
             }
             $this->assert('Petugas TU dilarang menyetujui SK PDM Kenaikan Pangkat (HTTP 403)', $isTuPromoForbidden);
         }
+    }
+
+    private function testDynamicSidebarVisibilityAndRoleIsolation(): void
+    {
+        $this->newLine();
+        $this->comment('▶ FASE 10: Pengujian Filter Visibilitas Menu Panel Sidebar Sesuai Role & Proteksi URL');
+
+        $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        // 1. ADMIN UTAMA (admin@yayasan.sch.id): Seluruh 15 menu tampil lengkap
+        $adminUtama = User::where('email', 'admin@yayasan.sch.id')->first();
+        Auth::login($adminUtama);
+        $reqAdmin = Request::create('/dashboard', 'GET');
+        app()->instance('request', $reqAdmin);
+        $htmlAdmin = $kernel->handle($reqAdmin)->getContent();
+        preg_match('/<aside id="sidebarNav".*?<\/aside>/s', $htmlAdmin, $mAdmin);
+        $sidebarAdmin = $mAdmin[0] ?? $htmlAdmin;
+
+        $this->assert('Admin Utama melihat menu Dashboard', str_contains($sidebarAdmin, 'Dashboard'));
+        $this->assert('Admin Utama melihat menu Data Induk Pegawai', str_contains($sidebarAdmin, 'Data Induk Pegawai'));
+        $this->assert('Admin Utama melihat menu Input Nilai DP3', str_contains($sidebarAdmin, 'Input Nilai DP3'));
+        $this->assert('Admin Utama melihat menu Input Nilai PKKS', str_contains($sidebarAdmin, 'Input Nilai PKKS'));
+        $this->assert('Admin Utama melihat menu Pembaruan Data Berkala', str_contains($sidebarAdmin, 'Pembaruan Data Berkala'));
+        $this->assert('Admin Utama melihat section PROSES', str_contains($sidebarAdmin, 'PROSES'));
+        $this->assert('Admin Utama melihat menu Rekrutmen', str_contains($sidebarAdmin, 'Rekrutmen'));
+        $this->assert('Admin Utama melihat menu Pembinaan Pegawai', str_contains($sidebarAdmin, 'Pembinaan Pegawai'));
+        $this->assert('Admin Utama melihat menu Kenaikan Pangkat', str_contains($sidebarAdmin, 'Kenaikan Pangkat'));
+        $this->assert('Admin Utama melihat menu Promosi KS', str_contains($sidebarAdmin, 'Promosi KS'));
+        $this->assert('Admin Utama melihat menu Promosi Tim Manajemen', str_contains($sidebarAdmin, 'Promosi Tim Manajemen'));
+        $this->assert('Admin Utama melihat menu Rekapitulasi Usulan', str_contains($sidebarAdmin, 'Rekapitulasi Usulan'));
+        $this->assert('Admin Utama melihat menu Prestasi Pegawai', str_contains($sidebarAdmin, 'Prestasi Pegawai'));
+        $this->assert('Admin Utama melihat section MASTER', str_contains($sidebarAdmin, 'MASTER'));
+        $this->assert('Admin Utama melihat menu Unit Kerja AUM', str_contains($sidebarAdmin, 'Unit Kerja AUM'));
+        $this->assert('Admin Utama melihat menu Bank Data NPM', str_contains($sidebarAdmin, 'Bank Data NPM'));
+        $this->assert('Admin Utama melihat menu Riwayat Mutasi', str_contains($sidebarAdmin, 'Riwayat Mutasi'));
+
+        // 2. KETUA MAJELIS (ketua@yayasan.sch.id): Read All Menu (Seluruh menu tampil di sidebar)
+        $ketua = User::where('email', 'ketua@yayasan.sch.id')->first();
+        Auth::login($ketua);
+        $reqKetua = Request::create('/dashboard', 'GET');
+        app()->instance('request', $reqKetua);
+        $htmlKetua = $kernel->handle($reqKetua)->getContent();
+        preg_match('/<aside id="sidebarNav".*?<\/aside>/s', $htmlKetua, $mKetua);
+        $sidebarKetua = $mKetua[0] ?? $htmlKetua;
+
+        $this->assert('Ketua Majelis melihat seluruh menu: Input Nilai PKKS', str_contains($sidebarKetua, 'Input Nilai PKKS'));
+        $this->assert('Ketua Majelis melihat seluruh menu: Rekrutmen', str_contains($sidebarKetua, 'Rekrutmen'));
+        $this->assert('Ketua Majelis melihat seluruh menu: Promosi KS', str_contains($sidebarKetua, 'Promosi KS'));
+        $this->assert('Ketua Majelis melihat seluruh menu: Rekapitulasi Usulan Terpadu', str_contains($sidebarKetua, 'Rekapitulasi Usulan'));
+        $this->assert('Ketua Majelis melihat seluruh menu: Bank Data NPM', str_contains($sidebarKetua, 'Bank Data NPM'));
+        $this->assert('Ketua Majelis melihat seluruh menu: Riwayat Mutasi', str_contains($sidebarKetua, 'Riwayat Mutasi'));
+
+        // 3. PETUGAS TU UNIT (tu.sd@sekolah.sch.id): Sembunyikan menu pusat & proteksi rute
+        $tu = User::where('email', 'tu.sd@sekolah.sch.id')->first();
+        Auth::login($tu);
+        $reqTu = Request::create('/dashboard', 'GET');
+        app()->instance('request', $reqTu);
+        $htmlTu = $kernel->handle($reqTu)->getContent();
+        preg_match('/<aside id="sidebarNav".*?<\/aside>/s', $htmlTu, $mTu);
+        $sidebarTu = $mTu[0] ?? $htmlTu;
+
+        // Menu Operasional TU Tampil
+        $this->assert('TU Unit melihat menu Dashboard', str_contains($sidebarTu, 'Dashboard'));
+        $this->assert('TU Unit melihat menu Data Induk Pegawai', str_contains($sidebarTu, 'Data Induk Pegawai'));
+        $this->assert('TU Unit melihat menu Input Nilai DP3', str_contains($sidebarTu, 'Input Nilai DP3'));
+        $this->assert('TU Unit melihat menu Pembaruan Data Berkala', str_contains($sidebarTu, 'Pembaruan Data Berkala'));
+        $this->assert('TU Unit melihat menu Pembinaan Pegawai', str_contains($sidebarTu, 'Pembinaan Pegawai'));
+        $this->assert('TU Unit melihat menu Kenaikan Pangkat', str_contains($sidebarTu, 'Kenaikan Pangkat'));
+        $this->assert('TU Unit melihat menu Promosi Tim Manajemen', str_contains($sidebarTu, 'Promosi Tim Manajemen'));
+        $this->assert('TU Unit melihat menu Prestasi Pegawai', str_contains($sidebarTu, 'Prestasi Pegawai'));
+        $this->assert('TU Unit melihat menu Profil Unit Kerja Saya', str_contains($sidebarTu, 'Profil Unit Kerja Saya'));
+
+        // Menu Tingkat Pusat DISEMBUNYIKAN dari Sidebar TU
+        $this->assert('Sidebar TU: Menu Input Nilai PKKS disembunyikan', !str_contains($sidebarTu, 'Input Nilai PKKS'));
+        $this->assert('Sidebar TU: Menu Rekrutmen disembunyikan', !str_contains($sidebarTu, 'Rekrutmen'));
+        $this->assert('Sidebar TU: Menu Promosi KS disembunyikan', !str_contains($sidebarTu, 'Promosi KS'));
+        $this->assert('Sidebar TU: Menu Rekapitulasi Usulan disembunyikan', !str_contains($sidebarTu, 'Rekapitulasi Usulan'));
+        $this->assert('Sidebar TU: Menu Bank Data NPM disembunyikan', !str_contains($sidebarTu, 'Bank Data NPM'));
+        $this->assert('Sidebar TU: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarTu, 'Riwayat Mutasi'));
+
+        // Proteksi Direct URL bagi TU (HTTP 403 Forbidden)
+        $reqTuNpm = Request::create('/master-npms', 'GET');
+        app()->instance('request', $reqTuNpm);
+        $this->assert('TU dilarang mengakses Bank Data NPM via URL (HTTP 403)', $kernel->handle($reqTuNpm)->getStatusCode() === 403);
+
+        $reqTuMut = Request::create('/mutations', 'GET');
+        app()->instance('request', $reqTuMut);
+        $this->assert('TU dilarang mengakses Riwayat Mutasi via URL (HTTP 403)', $kernel->handle($reqTuMut)->getStatusCode() === 403);
+
+        $reqTuRecruit = Request::create('/recruitments', 'GET');
+        app()->instance('request', $reqTuRecruit);
+        $this->assert('TU dilarang mengakses Rekrutmen via URL (HTTP 403)', $kernel->handle($reqTuRecruit)->getStatusCode() === 403);
+
+        $reqTuKs = Request::create('/leadership/headmasters', 'GET');
+        app()->instance('request', $reqTuKs);
+        $this->assert('TU dilarang mengakses Promosi KS via URL (HTTP 403)', $kernel->handle($reqTuKs)->getStatusCode() === 403);
+
+        $reqTuRecap = Request::create('/proposals/recap', 'GET');
+        app()->instance('request', $reqTuRecap);
+        $this->assert('TU dilarang mengakses Rekap Usulan Terpadu via URL (HTTP 403)', $kernel->handle($reqTuRecap)->getStatusCode() === 403);
+
+        // 4. PEGAWAI GURU (rahmat.guru@sekolah.sch.id): Hanya ESS Menu & Proteksi Rute
+        $guru = User::where('email', 'rahmat.guru@sekolah.sch.id')->first();
+        Auth::login($guru);
+        $reqGuru = Request::create('/dashboard', 'GET');
+        app()->instance('request', $reqGuru);
+        $htmlGuru = $kernel->handle($reqGuru)->getContent();
+        preg_match('/<aside id="sidebarNav".*?<\/aside>/s', $htmlGuru, $mGuru);
+        $sidebarGuru = $mGuru[0] ?? $htmlGuru;
+
+        // Menu ESS Tampil
+        $this->assert('Pegawai Guru melihat menu Dashboard', str_contains($sidebarGuru, 'Dashboard'));
+        $this->assert('Pegawai Guru melihat menu Profil Data Diri', str_contains($sidebarGuru, 'Profil Data Diri'));
+        $this->assert('Pegawai Guru melihat menu Prestasi Pegawai', str_contains($sidebarGuru, 'Prestasi Pegawai'));
+
+        // Seluruh Menu Administratif DISEMBUNYIKAN dari Sidebar Pegawai
+        $this->assert('Sidebar Pegawai: Menu Input Nilai DP3 disembunyikan', !str_contains($sidebarGuru, 'Input Nilai DP3'));
+        $this->assert('Sidebar Pegawai: Menu Input Nilai PKKS disembunyikan', !str_contains($sidebarGuru, 'Input Nilai PKKS'));
+        $this->assert('Sidebar Pegawai: Menu Pembaruan Data Berkala disembunyikan', !str_contains($sidebarGuru, 'Pembaruan Data Berkala'));
+        $this->assert('Sidebar Pegawai: Section PROSES disembunyikan', !str_contains($sidebarGuru, '<span>PROSES</span>'));
+        $this->assert('Sidebar Pegawai: Menu Rekrutmen disembunyikan', !str_contains($sidebarGuru, 'Rekrutmen'));
+        $this->assert('Sidebar Pegawai: Menu Pembinaan Pegawai disembunyikan', !str_contains($sidebarGuru, 'Pembinaan Pegawai'));
+        $this->assert('Sidebar Pegawai: Menu Kenaikan Pangkat disembunyikan', !str_contains($sidebarGuru, 'Kenaikan Pangkat'));
+        $this->assert('Sidebar Pegawai: Menu Promosi KS disembunyikan', !str_contains($sidebarGuru, 'Promosi KS'));
+        $this->assert('Sidebar Pegawai: Menu Promosi Tim Manajemen disembunyikan', !str_contains($sidebarGuru, 'Promosi Tim Manajemen'));
+        $this->assert('Sidebar Pegawai: Menu Rekapitulasi Usulan disembunyikan', !str_contains($sidebarGuru, 'Rekapitulasi Usulan'));
+        $this->assert('Sidebar Pegawai: Section MASTER disembunyikan', !str_contains($sidebarGuru, '<span>MASTER</span>'));
+        $this->assert('Sidebar Pegawai: Menu Unit Kerja AUM disembunyikan', !str_contains($sidebarGuru, 'Unit Kerja AUM'));
+        $this->assert('Sidebar Pegawai: Menu Profil Unit Kerja Saya disembunyikan', !str_contains($sidebarGuru, 'Profil Unit Kerja Saya'));
+        $this->assert('Sidebar Pegawai: Menu Bank Data NPM disembunyikan', !str_contains($sidebarGuru, 'Bank Data NPM'));
+        $this->assert('Sidebar Pegawai: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarGuru, 'Riwayat Mutasi'));
+
+        // Proteksi Direct URL bagi Pegawai (HTTP 403 Forbidden)
+        $reqGuruAudit = Request::create('/audits/quarterly', 'GET');
+        app()->instance('request', $reqGuruAudit);
+        $this->assert('Pegawai dilarang mengakses Pembaruan Data Berkala via URL (HTTP 403)', $kernel->handle($reqGuruAudit)->getStatusCode() === 403);
+
+        $reqGuruPromo = Request::create('/promotions', 'GET');
+        app()->instance('request', $reqGuruPromo);
+        $this->assert('Pegawai dilarang mengakses Kenaikan Pangkat via URL (HTTP 403)', $kernel->handle($reqGuruPromo)->getStatusCode() === 403);
+
+        $reqGuruCoach = Request::create('/coachings', 'GET');
+        app()->instance('request', $reqGuruCoach);
+        $this->assert('Pegawai dilarang mengakses Pembinaan Pegawai via URL (HTTP 403)', $kernel->handle($reqGuruCoach)->getStatusCode() === 403);
+
+        $reqGuruUnit = Request::create('/units', 'GET');
+        app()->instance('request', $reqGuruUnit);
+        $this->assert('Pegawai dilarang mengakses Master Unit via URL (HTTP 403)', $kernel->handle($reqGuruUnit)->getStatusCode() === 403);
     }
 
     private function testLogout(): void

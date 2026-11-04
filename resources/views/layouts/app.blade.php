@@ -84,7 +84,7 @@
 
                 <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('employees.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    <span>Data Induk Pegawai</span>
+                    <span>{{ auth()->user()->isPegawai() ? 'Profil Data Diri' : 'Data Induk Pegawai' }}</span>
                 </a>
 
                 @if(!auth()->user()->isPegawai())
@@ -92,26 +92,34 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>Input Nilai DP3</span>
                 </a>
+                @endif
 
+                {{-- PKKS: Hanya untuk Tingkat Yayasan dan Kepala Sekolah (Disembunyikan dari Petugas TU Unit dan Pegawai) --}}
+                @if(auth()->user()->isYayasanLevel() || auth()->user()->isKepalaSekolah())
                 <a href="{{ route('career.performance', ['type' => 'pkks']) }}" class="flex items-center gap-3 px-4 py-2 {{ (request()->routeIs('career.performance*') && request('type') === 'pkks') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     <span>Input Nilai PKKS</span>
                 </a>
                 @endif
 
+                @if(!auth()->user()->isPegawai())
                 <a href="{{ route('audits.quarterly') }}" class="flex items-center justify-between px-4 py-2 {{ request()->routeIs('audits.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                         <span>Pembaruan Data Berkala</span>
                     </div>
                 </a>
+                @endif
 
-                <!-- 2. PROSES -->
+                <!-- 2. PROSES (Hanya tampil jika bukan Pegawai ESS) -->
+                @if(!auth()->user()->isPegawai())
                 <div class="pt-3 pb-1 px-4 text-[12px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                     <span>PROSES</span>
                 </div>
 
+                {{-- Rekrutmen: Hanya untuk Tingkat Yayasan (Disembunyikan dari TU Unit, Kepsek, dan Pegawai) --}}
+                @if(auth()->user()->isYayasanLevel())
                 <a href="{{ route('recruitments.index') }}" class="flex items-center justify-between px-4 py-2 {{ request()->routeIs('recruitments.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition opacity-85 hover:opacity-100">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
@@ -119,11 +127,13 @@
                     </div>
                     <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-slate-700 text-amber-300 border border-amber-500/30">Beta</span>
                 </a>
+                @endif
 
                 <a href="{{ route('coachings.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('coachings.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     <span>Pembinaan Pegawai</span>
                 </a>
+                @endif
 
                 <!-- 3. KARIR -->
                 <div class="pt-3 pb-1 px-4 text-[12px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -131,21 +141,27 @@
                     <span>KARIR</span>
                 </div>
 
+                @if(!auth()->user()->isPegawai())
                 <a href="{{ route('promotions.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('promotions.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                     <span>Kenaikan Pangkat</span>
                 </a>
 
+                {{-- Promosi Kepala Sekolah: Hanya untuk Tingkat Yayasan (Disembunyikan dari TU Unit, Kepsek, dan Pegawai) --}}
+                @if(auth()->user()->isYayasanLevel())
                 <a href="{{ route('leadership.headmasters') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('leadership.headmasters*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                     <span>Promosi KS</span>
                 </a>
+                @endif
 
                 <a href="{{ route('leadership.vice_headmasters') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('leadership.vice_headmasters*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     <span>Promosi Tim Manajemen</span>
                 </a>
 
+                {{-- Rekapitulasi Usulan Terpadu: Hanya untuk Tingkat Yayasan (Disembunyikan dari TU Unit, Kepsek, dan Pegawai) --}}
+                @if(auth()->user()->isYayasanLevel())
                 <a href="{{ route('proposals.recap') }}" class="flex items-center justify-between px-4 py-2 {{ request()->routeIs('proposals.*') ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -153,6 +169,8 @@
                     </div>
                     <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">Terpadu</span>
                 </a>
+                @endif
+                @endif
 
                 <a href="{{ route('career.achievements') }}" class="flex items-center justify-between px-4 py-2 {{ request()->routeIs('career.achievements*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <div class="flex items-center gap-3">
@@ -161,29 +179,41 @@
                     </div>
                 </a>
 
-                <!-- 4. MASTER -->
+                <!-- 4. MASTER (Hanya tampil untuk Tingkat Yayasan atau Unit Sekolah, disembunyikan dari Pegawai ESS) -->
+                @if(!auth()->user()->isPegawai())
                 <div class="pt-3 pb-1 px-4 text-[12px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span>MASTER</span>
                 </div>
 
+                @if(auth()->user()->isYayasanLevel())
                 <a href="{{ route('units.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('units.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     <span>Unit Kerja AUM</span>
                 </a>
+                @elseif(auth()->user()->unit_id)
+                <a href="{{ route('units.show', auth()->user()->unit_id) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('units.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span>Profil Unit Kerja Saya</span>
+                </a>
+                @endif
 
+                {{-- Bank Data NPM: Hanya untuk Tingkat Yayasan (Disembunyikan dari TU Unit, Kepsek, dan Pegawai) --}}
+                @if(auth()->user()->isYayasanLevel())
                 <a href="{{ route('master-npms.index') }}" class="flex items-center justify-between px-4 py-2 {{ request()->routeIs('master-npms.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
                         <span>Bank Data NPM</span>
                     </div>
-     
                 </a>
 
+                {{-- Riwayat Mutasi: Hanya untuk Tingkat Yayasan (Disembunyikan dari TU Unit, Kepsek, dan Pegawai) --}}
                 <a href="{{ route('mutations.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('mutations.*') ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium' }} rounded-xl transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                     <span>Riwayat Mutasi</span>
                 </a>
+                @endif
+                @endif
             </nav>
 
             <!-- Sidebar Bottom: Profil Pengguna & Tombol Logout (Selalu Pinned & Langsung Terlihat Tanpa Scroll) -->

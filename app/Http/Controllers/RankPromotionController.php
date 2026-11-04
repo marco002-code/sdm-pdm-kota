@@ -14,6 +14,10 @@ class RankPromotionController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses modul kenaikan pangkat.');
+        }
+
         $query = RankPromotion::with(['employee', 'unit', 'verifier']);
 
         // Isolasi Unit untuk TU / Kepsek
@@ -171,6 +175,10 @@ class RankPromotionController extends Controller
     public function show($id)
     {
         $user = auth()->user();
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses modul kenaikan pangkat.');
+        }
+
         $promotion = RankPromotion::with(['employee', 'unit', 'verifier'])->findOrFail($id);
 
         if ($user && $user->isUnitLevel() && $user->unit_id && $user->unit_id !== $promotion->unit_id) {

@@ -55,6 +55,10 @@ class CareerController extends Controller
 
         $type = $request->input('type', 'dp3'); // 'dp3' atau 'pkks'
 
+        if ($type === 'pkks' && ! ($user->isYayasanLevel() || $user->isKepalaSekolah())) {
+            abort(403, 'Akses ditolak: Penilaian Kinerja Kepala Sekolah (PKKS) hanya dapat diakses oleh Pengurus Yayasan/Majelis dan Kepala Sekolah.');
+        }
+
         $query = PerformanceAppraisal::with(['employee', 'unit', 'evaluator']);
 
         // Isolasi Domain Unit Kerja: User unit-level (TU / Kepsek) hanya dapat melihat riwayat unitnya sendiri
@@ -110,6 +114,10 @@ class CareerController extends Controller
 
         if ($user->isKetuaMajelis()) {
             abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only). Input nilai dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
+        if ($request->input('appraisal_type') === 'pkks' && ! ($user->isYayasanLevel() || $user->isKepalaSekolah())) {
+            abort(403, 'Akses ditolak: Penilaian Kinerja Kepala Sekolah (PKKS) hanya dapat diinput oleh Pengurus Yayasan/Majelis atau Pengawas.');
         }
 
         $validated = $request->validate([

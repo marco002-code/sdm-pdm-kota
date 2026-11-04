@@ -14,6 +14,10 @@ class UnitController extends Controller
     {
         $user = auth()->user();
 
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses direktori master unit kerja.');
+        }
+
         // Isolasi Domain: TU / Staf unit langsung diarahkan ke profil unit kerjanya sendiri
         if ($user && $user->isUnitLevel() && $user->unit_id) {
             return redirect()->route('units.show', $user->unit_id);
@@ -77,6 +81,10 @@ class UnitController extends Controller
     public function show(Unit $unit)
     {
         $user = auth()->user();
+
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengakses profil unit kerja.');
+        }
 
         // Validasi Akses Domain Unit
         if ($user && $user->isUnitLevel() && $user->unit_id && $user->unit_id !== $unit->id) {

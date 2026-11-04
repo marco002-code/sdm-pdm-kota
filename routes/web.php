@@ -68,8 +68,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('units', UnitController::class)->only(['index', 'show']);
     Route::post('/units/{unit}/sync-npsn', [UnitController::class, 'syncNpsn'])->name('units.sync_npsn');
 
-    // Modul Rekrutmen & Promosi Kepemimpinan (Dapat diakses PDM & Sekolah sesuai isolasi data)
-    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat,ketua_majelis,ketua_yayasan,yayasan,kepsek,kepala_sekolah,tu_unit,tu'])->group(function () {
+    // Modul Rekrutmen & Promosi KS & Rekap Usulan Terpadu (Khusus Tingkat Yayasan / PDM)
+    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat,ketua_majelis,ketua_yayasan,yayasan'])->group(function () {
         // 1. Modul Rekrutmen Pegawai (GTT, PTT, GTY, PTY)
         Route::get('/recruitments', [RecruitmentController::class, 'index'])->name('recruitments.index');
         Route::get('/recruitments/{id}', [RecruitmentController::class, 'show'])->name('recruitments.show');
@@ -79,13 +79,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadership/headmasters/{id}', [LeadershipController::class, 'headmasterShow'])->name('leadership.headmaster_show');
         Route::post('/leadership/headmasters/{selectionId}/nominate', [LeadershipController::class, 'headmasterNominate'])->name('leadership.headmasters.nominate');
 
-        // 3. Modul Promosi Tim Manajemen (Wakil Kepala Sekolah)
+        // 3. REKAPITULASI USULAN TERPADU DARI SELURUH SEKOLAH
+        Route::get('/proposals/recap', [LeadershipController::class, 'proposalsRecap'])->name('proposals.recap');
+        Route::get('/proposals/recap/print', [LeadershipController::class, 'proposalsRecapPrint'])->name('proposals.recap_print');
+    });
+
+    // Modul Promosi Tim Manajemen / Waka (Dapat diakses Yayasan & Sekolah, non-Pegawai)
+    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat,ketua_majelis,ketua_yayasan,yayasan,kepsek,kepala_sekolah,tu_unit,tu,tu_sekolah'])->group(function () {
         Route::get('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasters'])->name('leadership.vice_headmasters');
         Route::post('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasterStore'])->name('leadership.vice_headmasters.store');
         Route::post('/leadership/vice-headmasters/{id}/verify', [LeadershipController::class, 'viceHeadmasterVerify'])->name('leadership.vice_headmasters.verify');
-
-        // 4. REKAPITULASI USULAN TERPADU DARI SELURUH SEKOLAH
-        Route::get('/proposals/recap', [LeadershipController::class, 'proposalsRecap'])->name('proposals.recap');
-        Route::get('/proposals/recap/print', [LeadershipController::class, 'proposalsRecapPrint'])->name('proposals.recap_print');
     });
 });

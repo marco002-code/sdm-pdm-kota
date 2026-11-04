@@ -18,6 +18,11 @@ class LeadershipController extends Controller
      */
     public function headmasters(Request $request)
     {
+        $user = auth()->user();
+        if (! $user->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Modul Promosi Kepala Sekolah hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
+
         $query = HeadmasterSelection::with(['unit', 'candidates.employee', 'electedCandidate.employee']);
 
         if ($request->filled('status')) {
@@ -49,6 +54,11 @@ class LeadershipController extends Controller
      */
     public function headmasterShow($id)
     {
+        $user = auth()->user();
+        if (! $user->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Modul Promosi Kepala Sekolah hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
+
         $selection = HeadmasterSelection::with(['unit', 'candidates.employee.unit'])->findOrFail($id);
         $candidates = $selection->candidates()->orderBy('total_score', 'desc')->get();
 
@@ -121,6 +131,11 @@ class LeadershipController extends Controller
      */
     public function viceHeadmasters(Request $request)
     {
+        $user = auth()->user();
+        if ($user && $user->isPegawai()) {
+            abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk mengelola promosi pimpinan unit.');
+        }
+
         $query = ViceHeadmasterNomination::with(['unit', 'employee']);
 
         if ($request->filled('field')) {
@@ -245,6 +260,9 @@ class LeadershipController extends Controller
     public function proposalsRecap(Request $request)
     {
         $user = auth()->user();
+        if (! $user->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Rekapitulasi Usulan Terpadu hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
 
         // 1. Query Usulan Kenaikan Pangkat & Alih Status Pegawai
         $rankQuery = RankPromotion::with(['employee', 'unit', 'verifier']);
@@ -308,6 +326,9 @@ class LeadershipController extends Controller
     public function proposalsRecapPrint(Request $request)
     {
         $user = auth()->user();
+        if (! $user->isYayasanLevel()) {
+            abort(403, 'Akses ditolak: Rekapitulasi Usulan Terpadu hanya dapat diakses oleh Admin dan Pengurus Yayasan/Majelis.');
+        }
 
         $rankPromotions = RankPromotion::with(['employee', 'unit'])
             ->when($user->isUnitLevel() && $user->unit_id, function($q) use ($user) {
