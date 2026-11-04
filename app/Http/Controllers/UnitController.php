@@ -97,6 +97,10 @@ class UnitController extends Controller
     {
         $user = auth()->user();
 
+        if ($user && $user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only). Sinkronisasi NPSN dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
         // Validasi Akses Domain Unit
         if ($user && $user->isUnitLevel() && $user->unit_id && $user->unit_id !== $unit->id) {
             abort(403, 'Akses ditolak: Anda hanya dapat menyinkronkan data NPSN unit kerja Anda sendiri.');

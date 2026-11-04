@@ -59,11 +59,16 @@
                 <h2 class="text-base font-bold text-slate-800">Daftar Bakal Calon & Penilaian Fit and Proper Test</h2>
                 <p class="text-xs text-slate-500">Asesmen Kompetensi Manajerial (25%), Supervisi (20%), Kewirausahaan (15%), AIK (20%), dan Pemaparan RPS (20%)</p>
             </div>
-            @if(auth()->user()->isYayasanLevel() || (auth()->user()->isUnitLevel() && auth()->user()->unit_id === $selection->unit_id))
+            @if(!auth()->user()->isKetuaMajelis() && (auth()->user()->isYayasanLevel() || (auth()->user()->isUnitLevel() && auth()->user()->unit_id === $selection->unit_id)))
             <button type="button" onclick="document.getElementById('modalNominateKS').classList.remove('hidden')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Usulkan Bakal Calon KS</span>
             </button>
+            @elseif(auth()->user()->isKetuaMajelis())
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Hak Akses: Sidang Pleno & Rekomendasi Majelis</span>
+            </div>
             @endif
         </div>
 

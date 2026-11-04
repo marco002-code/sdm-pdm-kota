@@ -22,53 +22,43 @@ class AuthController extends Controller
         $demoUsers = [
             [
                 'role_key' => 'admin',
-                'role_title' => 'IT Support (Admin)',
-                'level' => 'Tingkat Pusat',
+                'role_title' => 'Admin Utama',
+                'level' => 'Tingkat PDM (Pusat)',
                 'name' => 'IT Support Yayasan',
                 'email' => 'admin@yayasan.sch.id',
                 'password' => 'password',
                 'badge_color' => 'bg-purple-100 text-purple-800 border-purple-200',
-                'desc' => 'Manajemen sistem & akses'
-            ],
-            [
-                'role_key' => 'ketua_yayasan',
-                'role_title' => 'Ketua Yayasan',
-                'level' => 'Tingkat Pusat',
-                'name' => 'Dr. H. Ahmad Dahlan, M.Pd.',
-                'email' => 'ketua@yayasan.sch.id',
-                'password' => 'password',
-                'badge_color' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'desc' => 'Dasbor eksekutif & monitoring'
+                'desc' => 'Full akses sistem, master data, audit & hapus data'
             ],
             [
                 'role_key' => 'hr_pusat',
-                'role_title' => 'SDM Yayasan (HR Pusat)',
-                'level' => 'Tingkat Pusat',
+                'role_title' => 'Admin Yayasan / IT Support',
+                'level' => 'Tingkat PDM (Pusat)',
                 'name' => 'Siti Nurhaliza, S.Psi.',
                 'email' => 'hr@yayasan.sch.id',
                 'password' => 'password',
                 'badge_color' => 'bg-blue-100 text-blue-800 border-blue-200',
-                'desc' => 'Full master data & approval pusat'
+                'desc' => 'Kelola operasional SDM, NPM, mutasi & verifikasi'
             ],
             [
-                'role_key' => 'kepsek',
-                'role_title' => 'Kepala Sekolah (SD)',
-                'level' => 'Tingkat Unit',
-                'name' => 'Dra. Endang Lestari, M.Pd.',
-                'email' => 'kepsek.sd@sekolah.sch.id',
+                'role_key' => 'ketua_yayasan',
+                'role_title' => 'Ketua Majelis',
+                'level' => 'Tingkat PDM (Pusat)',
+                'name' => 'Dr. H. Ahmad Dahlan, M.Pd.',
+                'email' => 'ketua@yayasan.sch.id',
                 'password' => 'password',
-                'badge_color' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                'desc' => 'Approval unit SD & KPI staf'
+                'badge_color' => 'bg-amber-100 text-amber-800 border-amber-200',
+                'desc' => 'Read all menu & persetujuan SK / Sidang Majelis'
             ],
             [
                 'role_key' => 'tu',
-                'role_title' => 'Tata Usaha (TU SD)',
-                'level' => 'Tingkat Unit',
+                'role_title' => 'Petugas TU Unit (TU SD)',
+                'level' => 'Tingkat Unit (Sekolah)',
                 'name' => 'Budi Setiawan, A.Md.',
                 'email' => 'tu.sd@sekolah.sch.id',
                 'password' => 'password',
                 'badge_color' => 'bg-teal-100 text-teal-800 border-teal-200',
-                'desc' => 'Rekapitulasi absen & payroll unit'
+                'desc' => 'Kelola pegawai, DP3 & usulan berkala unitnya'
             ],
             [
                 'role_key' => 'pegawai',

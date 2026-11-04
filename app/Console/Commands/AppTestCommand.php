@@ -34,6 +34,7 @@ class AppTestCommand extends Command
         $this->testEmployeeModule();
         $this->testUnitMasterDataModule();
         $this->testPerformanceAppraisalModules();
+        $this->testRolePrivilegesAndCapabilities();
         $this->testLogout();
 
         $this->newLine();
@@ -256,7 +257,8 @@ class AppTestCommand extends Command
         $this->comment('▶ FASE 6: Pengujian Modul Data Induk Pegawai & Formulir Biodata');
 
         $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
-        $guruEmp = Employee::where('employee_type', Employee::TYPE_GURU)->first();
+        $guruUser = User::where('role', User::ROLE_PEGAWAI)->first();
+        $guruEmp = $guruUser?->employee ?? Employee::first();
 
         // 1. Index listing as HR Pusat
         $hr = User::where('role', User::ROLE_HR_PUSAT)->first();
@@ -517,10 +519,143 @@ class AppTestCommand extends Command
         $this->assert('Isolasi Domain: TU dilarang menginput nilai untuk pegawai unit lain (HTTP 403)', $isCrossUnitBlocked);
     }
 
+    private function testRolePrivilegesAndCapabilities(): void
+    {
+        $this->newLine();
+        $this->comment('▶ FASE 9: Pengujian Hak Akses & Privilege Sesuai 4 Peran Utama');
+
+        $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        $adminUtama = User::where('role', User::ROLE_ADMIN)->first();
+        $adminYayasan = User::where('role', User::ROLE_HR_PUSAT)->first();
+        $ketuaMajelis = User::where('role', User::ROLE_YAYASAN)->first();
+        $tuUnit = User::where('role', User::ROLE_TU)->whereNotNull('unit_id')->first();
+        $sampleEmp = Employee::first();
+
+        // 1. KETUA MAJELIS: Read All Menu, Tidak Bisa Edit/Hapus, KECUALI yang Approve butuh Ketua Majelis
+        Auth::login($ketuaMajelis);
+        $this->assert('Ketua Majelis terdeteksi isKetuaMajelis()', $ketuaMajelis->isKetuaMajelis());
+        $this->assert('Ketua Majelis memiliki canApproveAsKetuaMajelis()', $ketuaMajelis->canApproveAsKetuaMajelis());
+        $this->assert('Ketua Majelis TIDAK memiliki canDeleteEmployees()', !$ketuaMajelis->canDeleteEmployees());
+        $this->assert('Ketua Majelis TIDAK memiliki canEditEmployees()', !$ketuaMajelis->canEditEmployees());
+
+        // Read all menu
+        $menuUrls = ['/dashboard', '/employees', '/audits/quarterly', '/recruitments', '/coachings', '/promotions', '/leadership/headmasters', '/leadership/vice-headmasters', '/proposals/recap', '/career/achievements', '/units', '/master-npms', '/mutations'];
+        $allMenuAccessible = true;
+        foreach ($menuUrls as $url) {
+            $req = Request::create($url, 'GET');
+            app()->instance('request', $req);
+            $res = $kernel->handle($req);
+            if ($res->getStatusCode() !== 200) {
+                $allMenuAccessible = false;
+                break;
+            }
+        }
+        $this->assert('Ketua Majelis dapat membaca seluruh menu (Read All Menu HTTP 200)', $allMenuAccessible);
+
+        // Ketua Majelis DILARANG menambah/mengedit/menghapus
+        $reqKetuaCreateEmp = Request::create('/employees/create', 'GET');
+        app()->instance('request', $reqKetuaCreateEmp);
+        $this->assert('Ketua Majelis dilarang membuka form Tambah Pegawai (HTTP 403)', $kernel->handle($reqKetuaCreateEmp)->getStatusCode() === 403);
+
+        $reqKetuaEditEmp = Request::create("/employees/{$sampleEmp->id}/edit", 'GET');
+        app()->instance('request', $reqKetuaEditEmp);
+        $this->assert('Ketua Majelis dilarang membuka form Edit Pegawai (HTTP 403)', $kernel->handle($reqKetuaEditEmp)->getStatusCode() === 403);
+
+        $empController = app()->make(\App\Http\Controllers\EmployeeController::class);
+        $isForbiddenKetuaDel = false;
+        try {
+            $empController->destroy($sampleEmp);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $isForbiddenKetuaDel = ($e->getStatusCode() === 403);
+        }
+        $this->assert('Ketua Majelis dilarang menghapus Pegawai (HTTP 403)', $isForbiddenKetuaDel);
+
+        $reqKetuaNpm = Request::create('/master-npms/create', 'GET');
+        app()->instance('request', $reqKetuaNpm);
+        $this->assert('Ketua Majelis dilarang generate range Master NPM (HTTP 403)', $kernel->handle($reqKetuaNpm)->getStatusCode() === 403);
+
+        $reqKetuaMut = Request::create('/mutations/create', 'GET');
+        app()->instance('request', $reqKetuaMut);
+        $this->assert('Ketua Majelis dilarang membuat Mutasi Pegawai (HTTP 403)', $kernel->handle($reqKetuaMut)->getStatusCode() === 403);
+
+        $reqKetuaCoaching = Request::create('/coachings/create', 'GET');
+        app()->instance('request', $reqKetuaCoaching);
+        $this->assert('Ketua Majelis dilarang membuat Pembinaan Pegawai (HTTP 403)', $kernel->handle($reqKetuaCoaching)->getStatusCode() === 403);
+
+        $reqKetuaPromo = Request::create('/promotions/create', 'GET');
+        app()->instance('request', $reqKetuaPromo);
+        $this->assert('Ketua Majelis dilarang mengajukan Usulan Kenaikan Pangkat (HTTP 403)', $kernel->handle($reqKetuaPromo)->getStatusCode() === 403);
+
+        // Ketua Majelis BISA menyetujui / approve usulan SK PDM & Waka
+        $samplePromo = \App\Models\RankPromotion::first();
+        $promoController = app()->make(\App\Http\Controllers\RankPromotionController::class);
+        if ($samplePromo) {
+            $reqApprovePromo = Request::create("/promotions/{$samplePromo->id}/verify", 'POST', [
+                'status' => 'disetujui_pdm',
+                'sk_number' => 'TEST/SK/2026',
+                'sk_date' => date('Y-m-d'),
+                'reviewer_notes' => 'Disetujui Ketua Majelis',
+            ]);
+            $resApprove = $promoController->verify($reqApprovePromo, $samplePromo->id);
+            $this->assert('Ketua Majelis BERHAK menyetujui usulan SK Kenaikan Pangkat (HTTP 302)', $resApprove->isRedirect());
+        }
+
+        // 2. ADMIN UTAMA: Hak Penuh CRUD & Hapus
+        Auth::login($adminUtama);
+        $this->assert('Admin Utama terdeteksi isAdminUtama()', $adminUtama->isAdminUtama());
+        $this->assert('Admin Utama memiliki canDeleteEmployees()', $adminUtama->canDeleteEmployees());
+        $this->assert('Admin Utama memiliki canManageMasterNpm()', $adminUtama->canManageMasterNpm());
+        $this->assert('Admin Utama memiliki canManageMutations()', $adminUtama->canManageMutations());
+
+        // 3. ADMIN YAYASAN: Kelola Operasional SDM, Tidak Boleh Hapus
+        Auth::login($adminYayasan);
+        $this->assert('Admin Yayasan terdeteksi isAdminYayasan()', $adminYayasan->isAdminYayasan());
+        $this->assert('Admin Yayasan TIDAK memiliki canDeleteEmployees()', !$adminYayasan->canDeleteEmployees());
+        $this->assert('Admin Yayasan memiliki canManageMasterNpm()', $adminYayasan->canManageMasterNpm());
+        $this->assert('Admin Yayasan memiliki canManageMutations()', $adminYayasan->canManageMutations());
+
+        $isForbiddenAdminYayasanDel = false;
+        try {
+            $empController->destroy($sampleEmp);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $isForbiddenAdminYayasanDel = ($e->getStatusCode() === 403);
+        }
+        $this->assert('Admin Yayasan dilarang menghapus data pegawai (HTTP 403)', $isForbiddenAdminYayasanDel);
+
+        // 4. PETUGAS TU UNIT: Kelola Unit Sendiri, Dilarang Hapus & Dilarang Approve SK PDM
+        Auth::login($tuUnit);
+        $this->assert('Petugas TU Unit terdeteksi isTuUnit()', $tuUnit->isTuUnit());
+        $this->assert('Petugas TU Unit TIDAK memiliki canDeleteEmployees()', !$tuUnit->canDeleteEmployees());
+        $this->assert('Petugas TU Unit TIDAK memiliki canApproveAsKetuaMajelis()', !$tuUnit->canApproveAsKetuaMajelis());
+
+        $isForbiddenTuDel = false;
+        try {
+            $empController->destroy($sampleEmp);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $isForbiddenTuDel = ($e->getStatusCode() === 403);
+        }
+        $this->assert('Petugas TU dilarang menghapus data pegawai (HTTP 403)', $isForbiddenTuDel);
+
+        if ($samplePromo) {
+            $isTuPromoForbidden = false;
+            try {
+                $reqTuApprovePromo = Request::create("/promotions/{$samplePromo->id}/verify", 'POST', [
+                    'status' => 'disetujui_pdm',
+                    'sk_number' => 'ILLEGAL/SK/2026',
+                ]);
+                $promoController->verify($reqTuApprovePromo, $samplePromo->id);
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                $isTuPromoForbidden = ($e->getStatusCode() === 403);
+            }
+            $this->assert('Petugas TU dilarang menyetujui SK PDM Kenaikan Pangkat (HTTP 403)', $isTuPromoForbidden);
+        }
+    }
+
     private function testLogout(): void
     {
         $this->newLine();
-        $this->comment('▶ FASE 9: Pengujian Logout');
+        $this->comment('▶ FASE 10: Pengujian Logout');
 
         Auth::logout();
         $this->assert('Sesi berhasil dikeluarkan (Auth::check() false)', !Auth::check());

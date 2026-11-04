@@ -85,6 +85,10 @@ class QuarterlyAuditController extends Controller
         $quarter = (int) $request->input('quarter', UnitUpdateAudit::getCurrentQuarter());
         $status = $request->input('status', 'sudah_update');
 
+        if ($user->isUnitLevel() && $status !== 'sudah_update') {
+            $status = 'sudah_update';
+        }
+
         DB::transaction(function () use ($unit, $year, $quarter, $status, $user, $request) {
             $empCount = Employee::where('unit_id', $unit->id)->where('status', 'aktif')->count();
 

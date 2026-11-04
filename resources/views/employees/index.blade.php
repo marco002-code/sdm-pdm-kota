@@ -6,12 +6,17 @@
         <h1 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Data Induk Pegawai</h1>
         <p class="text-sm text-slate-500 mt-1">Bank Data Induk (Single Source of Truth) Pegawai PDM Kota Yogyakarta & Seluruh Unit Sekolah</p>
     </div>
-    @if(!auth()->user()->isPegawai())
+    @if(!auth()->user()->isPegawai() && !auth()->user()->isKetuaMajelis())
     <div class="flex items-center gap-3">
         <a href="{{ route('employees.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition shadow-blue-500/20">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>Tambah Pegawai Baru</span>
         </a>
+    </div>
+    @elseif(auth()->user()->isKetuaMajelis())
+    <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span>Mode Peninjauan (Read-Only)</span>
     </div>
     @endif
 </div>
@@ -272,14 +277,16 @@
                             <a href="{{ route('employees.print_pdf', $employee->id) }}" target="_blank" title="Cetak Dokumen Formulir (PDF)" class="p-2 bg-slate-100 text-slate-700 hover:bg-slate-800 hover:text-white rounded-lg transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             </a>
+                            @if(!auth()->user()->isKetuaMajelis())
                             <a href="{{ route('employees.edit', $employee->id) }}" title="Ubah Data" class="p-2 bg-slate-100 text-slate-600 hover:bg-slate-700 hover:text-white rounded-lg transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </a>
-                            @if(auth()->user()->isYayasanLevel())
+                            @endif
+                            @if(auth()->user()->isAdminUtama())
                             <form action="{{ route('employees.destroy', $employee->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pegawai {{ $employee->full_name }}? Data dapat dipulihkan melalui soft delete.');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" title="Hapus Pegawai (Khusus Admin / HR Pusat)" class="p-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition">
+                                <button type="submit" title="Hapus Pegawai (Khusus Admin Utama)" class="p-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </form>

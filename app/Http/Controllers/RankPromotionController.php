@@ -69,6 +69,10 @@ class RankPromotionController extends Controller
             abort(403, 'Akses ditolak: Pengajuan usulan dilakukan oleh Tata Usaha atau Kepala Sekolah.');
         }
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Pengajuan usulan baru dilakukan oleh Petugas TU Unit atau Admin. Wewenang Ketua Majelis adalah memimpin sidang dan menyetujui usulan SK PDM.');
+        }
+
         // Ambil daftar pegawai yang dapat diajukan
         if ($user->isUnitLevel() && $user->unit_id) {
             $employees = Employee::where('unit_id', $user->unit_id)
@@ -96,6 +100,10 @@ class RankPromotionController extends Controller
         $user = auth()->user();
         if ($user->isPegawai()) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Pengajuan usulan baru dilakukan oleh Petugas TU Unit atau Admin.');
         }
 
         $validated = $request->validate([
@@ -184,9 +192,14 @@ class RankPromotionController extends Controller
 
         $promotion = RankPromotion::with(['employee', 'unit'])->findOrFail($id);
 
-        // Jika TU hanya boleh memverifikasi tingkat sekolah jika belum diajukan ke majelis
-        if ($user->isUnitLevel() && $user->unit_id && $user->unit_id !== $promotion->unit_id) {
-            abort(403, 'Akses ditolak.');
+        // Jika Petugas TU / unit-level hanya berhak memverifikasi tingkat sekolah jika belum diajukan ke majelis
+        if ($user->isUnitLevel()) {
+            if ($user->unit_id && $user->unit_id !== $promotion->unit_id) {
+                abort(403, 'Akses ditolak: Anda hanya dapat memverifikasi usulan unit Anda sendiri.');
+            }
+            if (in_array($request->input('status'), ['sidang_majelis', 'disetujui_pdm'])) {
+                abort(403, 'Akses ditolak: Persetujuan SK PDM dan Sidang Majelis hanya dapat dilakukan oleh Ketua Majelis / PDM.');
+            }
         }
 
         $validated = $request->validate([
@@ -204,9 +217,9 @@ class RankPromotionController extends Controller
             }
 
             if ($validated['status'] === 'disetujui_pdm') {
-                $promotion->sk_number = $validated['sk_number'];
-                $promotion->sk_date = $validated['sk_date'];
-                $promotion->effective_date = $validated['effective_date'] ?: now()->toDateString();
+                $promotion->sk_number = $validated['sk_number'] ?? null;
+                $promotion->sk_date = $validated['sk_date'] ?? null;
+                $promotion->effective_date = ($validated['effective_date'] ?? null) ?: now()->toDateString();
                 $promotion->verified_by = $user->id;
 
                 // Update data pegawai sesuai usulan yang disetujui (misal GTT -> GTY, PTT -> PTY)

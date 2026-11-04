@@ -14,10 +14,17 @@
             <p class="text-xs text-slate-500 mt-0.5">Pengusulan, verifikasi portofolio, dan penerbitan SK Waka Kurikulum/Ismuba, Kesiswaan, Sarpras, dan Humas</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+            @if(!auth()->user()->isKetuaMajelis())
             <button type="button" onclick="document.getElementById('modalNominateWaka').classList.remove('hidden')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Usulkan Wakil Kepala Sekolah</span>
             </button>
+            @else
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Hak Akses: Verifikasi & Penerbitan SK</span>
+            </div>
+            @endif
             <a href="{{ route('leadership.headmasters') }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 <span>Seleksi Kepala Sekolah</span>

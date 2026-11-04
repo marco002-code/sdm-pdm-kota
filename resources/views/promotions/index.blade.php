@@ -13,12 +13,17 @@
             <h1 class="text-xl lg:text-2xl font-bold text-slate-800 tracking-tight mt-0.5">Modul Kenaikan Pangkat & Alih Status Pegawai</h1>
             <p class="text-xs text-slate-500 mt-0.5">Kenaikan pangkat berkala, penyesuaian ijazah, dan alih status GTT &rarr; GTY serta PTT &rarr; PTY</p>
         </div>
-        @if(!auth()->user()->isPegawai())
+        @if(!auth()->user()->isPegawai() && !auth()->user()->isKetuaMajelis())
         <div class="flex items-center gap-2">
             <a href="{{ route('promotions.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Usulkan Kenaikan Pangkat / Alih Status</span>
             </a>
+        </div>
+        @elseif(auth()->user()->isKetuaMajelis())
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <span>Hak Akses: Sidang & Persetujuan SK PDM</span>
         </div>
         @endif
     </div>

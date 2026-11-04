@@ -22,33 +22,11 @@ class RoleMiddleware
             return redirect('login');
         }
 
-        $userRole = auth()->user()->role;
-        $allowedRoles = [];
+        $user = auth()->user();
 
-        foreach ($roles as $role) {
-            $allowedRoles[] = $role;
-            if ($role === 'yayasan') {
-                $allowedRoles[] = 'ketua_yayasan';
-            }
-            if ($role === 'ketua_yayasan') {
-                $allowedRoles[] = 'yayasan';
-            }
-            if ($role === 'kepsek') {
-                $allowedRoles[] = 'kepala_sekolah';
-            }
-            if ($role === 'kepala_sekolah') {
-                $allowedRoles[] = 'kepsek';
-            }
-            if ($role === 'tu') {
-                $allowedRoles[] = 'tu_sekolah';
-            }
-            if ($role === 'tu_sekolah') {
-                $allowedRoles[] = 'tu';
-            }
-        }
-
-        if (!in_array($userRole, $allowedRoles, true)) {
-            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk peran ini.');
+        // Gunakan metode hasRole dari User model yang mendukung seluruh alias RBAC
+        if (!$user->hasRole($roles)) {
+            abort(403, 'Akses ditolak: Anda tidak memiliki izin untuk peran atau halaman ini.');
         }
 
         return $next($request);

@@ -72,6 +72,10 @@ class LeadershipController extends Controller
         $selection = HeadmasterSelection::findOrFail($selectionId);
         $user = auth()->user();
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Pendaftaran bakal calon dilakukan oleh Petugas TU Unit atau Tim Penjaringan.');
+        }
+
         $validated = $request->validate([
             'employee_id'            => 'required|exists:employees,id',
             'nbm'                    => 'nullable|string|max:50',
@@ -164,6 +168,10 @@ class LeadershipController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Pengajuan calon Wakil Kepala Sekolah dilakukan oleh Petugas TU Unit atau Kepala Sekolah.');
+        }
+
         $validated = $request->validate([
             'employee_id'               => 'required|exists:employees,id',
             'field'                     => 'required|in:kurikulum_ismuba,kesiswaan,sarpras,humas_kemuhammadiyahan,lainnya',
@@ -209,6 +217,10 @@ class LeadershipController extends Controller
             'sk_date'   => 'nullable|date',
             'notes'     => 'nullable|string',
         ]);
+
+        if ($validated['status'] === 'disetujui' && !$user->canApproveAsKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Persetujuan penetapan dan penerbitan SK Wakil Kepala Sekolah merupakan wewenang Ketua Majelis.');
+        }
 
         DB::transaction(function () use ($nomination, $validated, $request) {
             $nomination->status = $validated['status'];

@@ -49,6 +49,11 @@ class MasterNpmController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
+        if (!$user->canManageMasterNpm()) {
+            abort(403, 'Akses ditolak: Pengelolaan dan penambahan Bank Data Master NPM hanya dapat dilakukan oleh Admin Utama atau Admin Yayasan.');
+        }
+
         $units = Unit::where('is_active', true)->orderBy('name', 'asc')->get();
         return view('master_npms.create', compact('units'));
     }
@@ -59,6 +64,11 @@ class MasterNpmController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user->canManageMasterNpm()) {
+            abort(403, 'Akses ditolak: Pembuatan nomor NPM hanya dapat dilakukan oleh Admin Utama atau Admin Yayasan.');
+        }
+
         $mode = $request->input('mode', 'single');
 
         if ($mode === 'batch') {

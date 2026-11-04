@@ -69,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/units/{unit}/sync-npsn', [UnitController::class, 'syncNpsn'])->name('units.sync_npsn');
 
     // Modul Rekrutmen & Promosi Kepemimpinan (Dapat diakses PDM & Sekolah sesuai isolasi data)
-    Route::middleware(['role:admin,yayasan,hr_pusat,kepsek,tu'])->group(function () {
+    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat,ketua_majelis,ketua_yayasan,yayasan,kepsek,kepala_sekolah,tu_unit,tu'])->group(function () {
         // 1. Modul Rekrutmen Pegawai (GTT, PTT, GTY, PTY)
         Route::get('/recruitments', [RecruitmentController::class, 'index'])->name('recruitments.index');
         Route::get('/recruitments/{id}', [RecruitmentController::class, 'show'])->name('recruitments.show');

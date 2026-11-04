@@ -154,6 +154,10 @@ class EmployeeController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only) dan persetujuan kebijakan. Penambahan data pegawai dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
         $units = $user->isUnitLevel() && $user->unit_id
             ? Unit::where('id', $user->unit_id)->get()
             : Unit::where('is_active', true)->get();
@@ -169,6 +173,10 @@ class EmployeeController extends Controller
         $user = Auth::user();
         if ($user->isPegawai()) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only) dan persetujuan kebijakan.');
         }
 
         // Proteksi unit untuk Kepsek / TU: Kunci unit_id sebelum validasi
@@ -332,6 +340,10 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only) dan persetujuan kebijakan. Pengubahan data pegawai dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
         // RBAC: Pegawai hanya boleh edit data dirinya sendiri
         if ($user->isPegawai() && (!$user->employee || $user->employee->id !== $employee->id)) {
             abort(403, 'Akses ditolak: Anda hanya berhak mengedit data profil Anda sendiri.');
@@ -355,6 +367,10 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         $user = Auth::user();
+
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only) dan persetujuan kebijakan.');
+        }
 
         if ($user->isPegawai() && (!$user->employee || $user->employee->id !== $employee->id)) {
             abort(403, 'Akses ditolak: Anda hanya berhak memperbarui data profil Anda sendiri.');
@@ -541,8 +557,8 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         $user = Auth::user();
-        if (!$user->isYayasanLevel()) {
-            abort(403, 'Akses ditolak: Tenaga Tata Usaha tidak memiliki wewenang untuk menghapus data pegawai. Penghapusan hanya dapat dilakukan oleh HR Pusat atau Admin Yayasan.');
+        if (!$user->canDeleteEmployees()) {
+            abort(403, 'Akses ditolak: Penghapusan data pegawai hanya dapat dilakukan oleh Admin Utama.');
         }
 
         $unitId = $employee->unit_id;

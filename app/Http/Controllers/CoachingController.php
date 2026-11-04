@@ -55,6 +55,10 @@ class CoachingController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only). Pencatatan pembinaan dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
         $units = $user->isUnitLevel() && $user->unit_id
             ? Unit::where('id', $user->unit_id)->get()
             : Unit::where('is_active', true)->orderBy('name', 'asc')->get();
@@ -74,6 +78,11 @@ class CoachingController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only).');
+        }
+
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'coaching_date' => 'required|date',

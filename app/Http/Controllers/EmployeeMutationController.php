@@ -47,6 +47,11 @@ class EmployeeMutationController extends Controller
      */
     public function create(Request $request)
     {
+        $user = Auth::user();
+        if (!$user->canManageMutations()) {
+            abort(403, 'Akses ditolak: Pencatatan mutasi pegawai lintas unit hanya dapat dilakukan oleh Admin Utama atau Admin Yayasan.');
+        }
+
         $selectedEmployee = null;
         if ($request->filled('employee_id')) {
             $selectedEmployee = Employee::with('unit')->findOrFail($request->employee_id);
@@ -63,6 +68,11 @@ class EmployeeMutationController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user->canManageMutations()) {
+            abort(403, 'Akses ditolak: Pencatatan mutasi pegawai lintas unit hanya dapat dilakukan oleh Admin Utama atau Admin Yayasan.');
+        }
+
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'destination_unit_id' => 'required|exists:units,id',

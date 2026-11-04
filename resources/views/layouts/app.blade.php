@@ -196,9 +196,12 @@
                         <div class="text-xs font-bold text-white truncate">{{ auth()->user()->name ?? 'Pengguna' }}</div>
                         <div class="text-[10px] text-slate-400 truncate flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full {{ auth()->user()->isYayasanLevel() ? 'bg-amber-400' : 'bg-emerald-400' }} inline-block"></span>
-                            <span>{{ auth()->user()->isTu() ? 'Tenaga Tata Usaha' : str_replace('_', ' ', auth()->user()->role ?? 'Role') }}</span>
+                            <span>{{ auth()->user()->role_title }}</span>
                             @if(auth()->user()?->unit)
                                 <span>• {{ auth()->user()->unit->code }}</span>
+                            @endif
+                            @if(auth()->user()->isKetuaMajelis())
+                                <span class="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">Approval</span>
                             @endif
                         </div>
                     </div>
@@ -243,9 +246,12 @@
                         </div>
                         <div class="text-left">
                             <div class="text-xs font-bold text-slate-800 leading-none">{{ auth()->user()->name ?? 'Pengguna' }}</div>
-                            <div class="text-[10px] text-slate-500 leading-tight mt-0.5">
-                                {{ auth()->user()->isTu() ? 'Tenaga Tata Usaha' : str_replace('_', ' ', auth()->user()->role ?? 'Admin') }}
+                            <div class="text-[10px] text-slate-500 leading-tight mt-0.5 flex items-center gap-1">
+                                <span>{{ auth()->user()->role_title }}</span>
                                 @if(auth()->user()?->unit) • {{ auth()->user()->unit->code }} @endif
+                                @if(auth()->user()->isKetuaMajelis())
+                                    <span class="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">Approval</span>
+                                @endif
                             </div>
                         </div>
                     </div>

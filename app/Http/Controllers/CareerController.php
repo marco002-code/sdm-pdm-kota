@@ -108,6 +108,10 @@ class CareerController extends Controller
             abort(403, 'Akses ditolak: Pegawai tidak memiliki izin untuk menginput penilaian kinerja.');
         }
 
+        if ($user->isKetuaMajelis()) {
+            abort(403, 'Akses ditolak: Ketua Majelis memiliki hak akses peninjauan (Read-Only). Input nilai dilakukan oleh Petugas TU Unit atau Admin.');
+        }
+
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'appraisal_type' => 'required|in:dp3,pkks,reguler',
