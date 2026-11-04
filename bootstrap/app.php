@@ -16,6 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        // Pengecualian rute agar panel pemeliharaan tetap dapat diakses oleh Admin saat mode maintenance aktif
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'maintenance',
+            'maintenance/*',
+            'login',
+            'quick-login',
+            'logout',
+            'up',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -210,6 +210,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Hak akses pengelolaan pemeliharaan sistem (Maintenance Mode, Clear Cache, System Diagnostics).
+     * Khusus Admin Utama dan IT Support / Admin Yayasan.
+     */
+    public function canManageMaintenance(): bool
+    {
+        return $this->isAdminUtama() || $this->isAdminYayasan();
+    }
+
+    /**
      * Memeriksa apakah pengguna memiliki salah satu role yang diberikan (mendukung alias).
      */
     public function hasRole(string|array $roles): bool

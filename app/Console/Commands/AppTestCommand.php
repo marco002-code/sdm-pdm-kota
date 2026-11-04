@@ -36,6 +36,7 @@ class AppTestCommand extends Command
         $this->testPerformanceAppraisalModules();
         $this->testRolePrivilegesAndCapabilities();
         $this->testDynamicSidebarVisibilityAndRoleIsolation();
+        $this->testMaintenanceModule();
         $this->testLogout();
 
         $this->newLine();
@@ -695,6 +696,7 @@ class AppTestCommand extends Command
         $this->assert('Admin Utama melihat menu Unit Kerja AUM', str_contains($sidebarAdmin, 'Unit Kerja AUM'));
         $this->assert('Admin Utama melihat menu Bank Data NPM', str_contains($sidebarAdmin, 'Bank Data NPM'));
         $this->assert('Admin Utama melihat menu Riwayat Mutasi', str_contains($sidebarAdmin, 'Riwayat Mutasi'));
+        $this->assert('Admin Utama melihat menu Pemeliharaan Sistem', str_contains($sidebarAdmin, 'Pemeliharaan Sistem'));
 
         // 2. KETUA MAJELIS (ketua@yayasan.sch.id): Read All Menu (Seluruh menu tampil di sidebar)
         $ketua = User::where('email', 'ketua@yayasan.sch.id')->first();
@@ -711,6 +713,7 @@ class AppTestCommand extends Command
         $this->assert('Ketua Majelis melihat seluruh menu: Rekapitulasi Usulan Terpadu', str_contains($sidebarKetua, 'Rekapitulasi Usulan'));
         $this->assert('Ketua Majelis melihat seluruh menu: Bank Data NPM', str_contains($sidebarKetua, 'Bank Data NPM'));
         $this->assert('Ketua Majelis melihat seluruh menu: Riwayat Mutasi', str_contains($sidebarKetua, 'Riwayat Mutasi'));
+        $this->assert('Ketua Majelis: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarKetua, 'Pemeliharaan Sistem'));
 
         // 3. PETUGAS TU UNIT (tu.sd@sekolah.sch.id): Sembunyikan menu pusat & proteksi rute
         $tu = User::where('email', 'tu.sd@sekolah.sch.id')->first();
@@ -739,6 +742,7 @@ class AppTestCommand extends Command
         $this->assert('Sidebar TU: Menu Rekapitulasi Usulan disembunyikan', !str_contains($sidebarTu, 'Rekapitulasi Usulan'));
         $this->assert('Sidebar TU: Menu Bank Data NPM disembunyikan', !str_contains($sidebarTu, 'Bank Data NPM'));
         $this->assert('Sidebar TU: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarTu, 'Riwayat Mutasi'));
+        $this->assert('Sidebar TU: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarTu, 'Pemeliharaan Sistem'));
 
         // Proteksi Direct URL bagi TU (HTTP 403 Forbidden)
         $reqTuNpm = Request::create('/master-npms', 'GET');
@@ -760,6 +764,10 @@ class AppTestCommand extends Command
         $reqTuRecap = Request::create('/proposals/recap', 'GET');
         app()->instance('request', $reqTuRecap);
         $this->assert('TU dilarang mengakses Rekap Usulan Terpadu via URL (HTTP 403)', $kernel->handle($reqTuRecap)->getStatusCode() === 403);
+
+        $reqTuMaint = Request::create('/maintenance', 'GET');
+        app()->instance('request', $reqTuMaint);
+        $this->assert('TU dilarang mengakses Modul Pemeliharaan Sistem via URL (HTTP 403)', $kernel->handle($reqTuMaint)->getStatusCode() === 403);
 
         // 4. PEGAWAI GURU (rahmat.guru@sekolah.sch.id): Hanya ESS Menu & Proteksi Rute
         $guru = User::where('email', 'rahmat.guru@sekolah.sch.id')->first();
@@ -791,6 +799,7 @@ class AppTestCommand extends Command
         $this->assert('Sidebar Pegawai: Menu Profil Unit Kerja Saya disembunyikan', !str_contains($sidebarGuru, 'Profil Unit Kerja Saya'));
         $this->assert('Sidebar Pegawai: Menu Bank Data NPM disembunyikan', !str_contains($sidebarGuru, 'Bank Data NPM'));
         $this->assert('Sidebar Pegawai: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarGuru, 'Riwayat Mutasi'));
+        $this->assert('Sidebar Pegawai: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarGuru, 'Pemeliharaan Sistem'));
 
         // Proteksi Direct URL bagi Pegawai (HTTP 403 Forbidden)
         $reqGuruAudit = Request::create('/audits/quarterly', 'GET');
@@ -808,6 +817,106 @@ class AppTestCommand extends Command
         $reqGuruUnit = Request::create('/units', 'GET');
         app()->instance('request', $reqGuruUnit);
         $this->assert('Pegawai dilarang mengakses Master Unit via URL (HTTP 403)', $kernel->handle($reqGuruUnit)->getStatusCode() === 403);
+
+        $reqGuruMaint = Request::create('/maintenance', 'GET');
+        app()->instance('request', $reqGuruMaint);
+        $this->assert('Pegawai dilarang mengakses Modul Pemeliharaan Sistem via URL (HTTP 403)', $kernel->handle($reqGuruMaint)->getStatusCode() === 403);
+    }
+
+    private function testMaintenanceModule(): void
+    {
+        $this->newLine();
+        $this->comment('▶ FASE 11: Pengujian Modul Pemeliharaan Sistem (Maintenance Controller & Panel Admin)');
+
+        $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        // 1. Verifikasi Privilege canManageMaintenance()
+        $adminUtama = User::where('email', 'admin@yayasan.sch.id')->first();
+        $itSupport = User::where('email', 'hr@yayasan.sch.id')->first();
+        $ketua = User::where('email', 'ketua@yayasan.sch.id')->first();
+        $tu = User::where('email', 'tu.sd@sekolah.sch.id')->first();
+        $guru = User::where('email', 'rahmat.guru@sekolah.sch.id')->first();
+
+        $this->assert('Admin Utama memiliki hak canManageMaintenance()', $adminUtama->canManageMaintenance());
+        $this->assert('IT Support / Admin Yayasan memiliki hak canManageMaintenance()', $itSupport->canManageMaintenance());
+        $this->assert('Ketua Majelis TIDAK memiliki hak canManageMaintenance()', !$ketua->canManageMaintenance());
+        $this->assert('Petugas TU Unit TIDAK memiliki hak canManageMaintenance()', !$tu->canManageMaintenance());
+        $this->assert('Pegawai Guru TIDAK memiliki hak canManageMaintenance()', !$guru->canManageMaintenance());
+
+        // 2. Akses Dasbor Pemeliharaan Sistem oleh Admin Utama (HTTP 200)
+        Auth::login($adminUtama);
+        $reqAdminMaint = Request::create('/maintenance', 'GET');
+        app()->instance('request', $reqAdminMaint);
+        $resAdminMaint = $kernel->handle($reqAdminMaint);
+        $htmlAdminMaint = $resAdminMaint->getContent();
+
+        $this->assert('Admin Utama dapat mengakses Halaman Pemeliharaan Sistem (HTTP 200)', $resAdminMaint->getStatusCode() === 200);
+        $this->assert('Halaman memuat judul Pemeliharaan Sistem & Status Maintenance', str_contains($htmlAdminMaint, 'Pemeliharaan Sistem & Status Maintenance'));
+        $this->assert('Halaman memuat diagnosa Versi PHP dan Laravel', str_contains($htmlAdminMaint, 'Versi PHP:') && str_contains($htmlAdminMaint, 'Versi Laravel:'));
+        $this->assert('Halaman memuat info Kapasitas Disk Server', str_contains($htmlAdminMaint, 'Kapasitas Disk Server'));
+        $this->assert('Halaman memuat panel Alat Pemeliharaan & Operasi Cepat', str_contains($htmlAdminMaint, 'Alat Pemeliharaan & Operasi Cepat'));
+        $this->assert('Halaman memuat konsol Cuplikan Log Sistem', str_contains($htmlAdminMaint, 'Cuplikan Log Sistem'));
+
+        // 3. Akses oleh IT Support / Admin Yayasan (HTTP 200)
+        Auth::login($itSupport);
+        $reqItMaint = Request::create('/maintenance', 'GET');
+        app()->instance('request', $reqItMaint);
+        $resItMaint = $kernel->handle($reqItMaint);
+        $this->assert('IT Support / Admin Yayasan dapat mengakses Halaman Pemeliharaan Sistem (HTTP 200)', $resItMaint->getStatusCode() === 200);
+
+        // 4. Pembatasan Akses (Non-Admin HTTP 403 Forbidden)
+        Auth::login($ketua);
+        $reqKetuaMaint = Request::create('/maintenance', 'GET');
+        app()->instance('request', $reqKetuaMaint);
+        $this->assert('Ketua Majelis DITOLAK mengakses Halaman Pemeliharaan Sistem (HTTP 403)', $kernel->handle($reqKetuaMaint)->getStatusCode() === 403);
+
+        // 5. Pengujian Aksi Bersihkan Cache (Clear Cache)
+        Auth::login($adminUtama);
+        $maintController = app()->make(\App\Http\Controllers\MaintenanceController::class);
+        $reqClearCache = Request::create('/maintenance/clear-cache', 'POST', ['type' => 'all']);
+        $resClearCache = $maintController->clearCache($reqClearCache);
+        $this->assert('Aksi Bersihkan Semua Cache berhasil dieksekusi (Redirect 302)', $resClearCache->isRedirect());
+
+        // 6. Pengujian Aksi Optimasi Aplikasi (Optimize)
+        $reqOptimize = Request::create('/maintenance/optimize', 'POST');
+        $resOptimize = $maintController->optimize($reqOptimize);
+        $this->assert('Aksi Optimasi Aplikasi berhasil dieksekusi (Redirect 302)', $resOptimize->isRedirect());
+
+        // Kembalikan auth sesi & bersihkan compiled file untuk CLI test
+        Auth::login($adminUtama);
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+
+        // 7. Pengujian Aksi Pencadangan Basis Data Instan (Backup)
+        $reqBackup = Request::create('/maintenance/backup', 'POST');
+        $resBackup = $maintController->backup($reqBackup);
+        $this->assert('Aksi Pencadangan Database berhasil dieksekusi (Redirect 302)', $resBackup->isRedirect());
+
+        // Verifikasi bahwa berkas backup tersimpan di storage/backups
+        $backupFiles = \Illuminate\Support\Facades\File::files(storage_path('backups'));
+        $this->assert('Direktori storage/backups memuat setidaknya 1 berkas cadangan', count($backupFiles) >= 1);
+
+        // 8. Pengujian Aksi Perbaiki Symlink Storage (storage:link)
+        $resLink = $maintController->linkStorage();
+        $this->assert('Aksi Perbaiki Symlink Storage berhasil dieksekusi (Redirect 302)', $resLink->isRedirect());
+
+        // 9. Pengujian Aksi Kosongkan Log Sistem (Clear Log)
+        $resClearLog = $maintController->clearLog();
+        $this->assert('Aksi Kosongkan Log Sistem berhasil dieksekusi (Redirect 302)', $resClearLog->isRedirect());
+
+        // 10. Pengujian Siklus Toggle Mode Pemeliharaan (Down -> Up)
+        $reqDown = Request::create('/maintenance/toggle', 'POST', [
+            'secret' => 'test-bypass-key-1234',
+            'retry' => 120,
+        ]);
+        $resDown = $maintController->toggle($reqDown);
+        $this->assert('Aktivasi Maintenance Mode via Controller berhasil (Redirect 302)', $resDown->isRedirect());
+        $this->assert('Aplikasi terdeteksi isDownForMaintenance() TRUE', app()->isDownForMaintenance());
+
+        // Matikan kembali agar kembali daring (Live)
+        $reqUp = Request::create('/maintenance/toggle', 'POST');
+        $resUp = $maintController->toggle($reqUp);
+        $this->assert('Penonaktifan Maintenance Mode via Controller berhasil (Redirect 302)', $resUp->isRedirect());
+        $this->assert('Aplikasi kembali LIVE (isDownForMaintenance() FALSE)', !app()->isDownForMaintenance());
     }
 
     private function testLogout(): void

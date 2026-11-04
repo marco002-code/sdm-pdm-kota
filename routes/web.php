@@ -13,6 +13,7 @@ use App\Http\Controllers\QuarterlyAuditController;
 use App\Http\Controllers\RankPromotionController;
 use App\Http\Controllers\RecruitmentController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\UnitController;
 
 // Halaman Utama / Landing Page Resmi
@@ -89,5 +90,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasters'])->name('leadership.vice_headmasters');
         Route::post('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasterStore'])->name('leadership.vice_headmasters.store');
         Route::post('/leadership/vice-headmasters/{id}/verify', [LeadershipController::class, 'viceHeadmasterVerify'])->name('leadership.vice_headmasters.verify');
+    });
+
+    // Modul Pemeliharaan Sistem & Maintenance Mode (Khusus Admin Utama & IT Support / Admin Yayasan)
+    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat'])->group(function () {
+        Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+        Route::post('/maintenance/toggle', [MaintenanceController::class, 'toggle'])->name('maintenance.toggle');
+        Route::post('/maintenance/clear-cache', [MaintenanceController::class, 'clearCache'])->name('maintenance.clear_cache');
+        Route::post('/maintenance/optimize', [MaintenanceController::class, 'optimize'])->name('maintenance.optimize');
+        Route::post('/maintenance/backup', [MaintenanceController::class, 'backup'])->name('maintenance.backup');
+        Route::post('/maintenance/storage-link', [MaintenanceController::class, 'linkStorage'])->name('maintenance.storage_link');
+        Route::post('/maintenance/clear-log', [MaintenanceController::class, 'clearLog'])->name('maintenance.clear_log');
     });
 });
