@@ -219,6 +219,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Hak akses pengelolaan pengguna / akun sistem (Kelola Akun, Tambah User, Reset Password, Hapus User).
+     * Khusus Admin Utama dan IT Support / Admin Yayasan.
+     */
+    public function canManageUsers(): bool
+    {
+        return $this->isAdminUtama() || $this->isAdminYayasan();
+    }
+
+    /**
      * Memeriksa apakah pengguna memiliki salah satu role yang diberikan (mendukung alias).
      */
     public function hasRole(string|array $roles): bool

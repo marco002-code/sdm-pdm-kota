@@ -15,6 +15,7 @@ use App\Http\Controllers\RecruitmentController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UserController;
 
 // Halaman Utama / Landing Page Resmi
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -90,6 +91,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasters'])->name('leadership.vice_headmasters');
         Route::post('/leadership/vice-headmasters', [LeadershipController::class, 'viceHeadmasterStore'])->name('leadership.vice_headmasters.store');
         Route::post('/leadership/vice-headmasters/{id}/verify', [LeadershipController::class, 'viceHeadmasterVerify'])->name('leadership.vice_headmasters.verify');
+    });
+
+    // Modul Kelola Akun Pengguna (Khusus Admin Utama & Admin Yayasan / SDM)
+    Route::middleware(['role:admin_utama,admin,admin_yayasan,it_support,hr_pusat'])->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset_password');
+        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle_status');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
     // Modul Pemeliharaan Sistem & Maintenance Mode (Khusus Admin Utama & IT Support / Admin Yayasan)

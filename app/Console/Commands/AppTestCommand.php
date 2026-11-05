@@ -37,6 +37,7 @@ class AppTestCommand extends Command
         $this->testRolePrivilegesAndCapabilities();
         $this->testDynamicSidebarVisibilityAndRoleIsolation();
         $this->testMaintenanceModule();
+        $this->testUserManagementModule();
         $this->testLogout();
 
         $this->newLine();
@@ -754,7 +755,13 @@ class AppTestCommand extends Command
         $this->assert('Admin Utama melihat menu Unit Kerja AUM', str_contains($sidebarAdmin, 'Unit Kerja AUM'));
         $this->assert('Admin Utama melihat menu Bank Data NPM', str_contains($sidebarAdmin, 'Bank Data NPM'));
         $this->assert('Admin Utama melihat menu Riwayat Mutasi', str_contains($sidebarAdmin, 'Riwayat Mutasi'));
+        $this->assert('Admin Utama melihat menu Kelola Akun', str_contains($sidebarAdmin, 'Kelola Akun'));
         $this->assert('Admin Utama melihat menu Pemeliharaan Sistem', str_contains($sidebarAdmin, 'Pemeliharaan Sistem'));
+
+        // Verifikasi Posisi Menu: Kelola Akun berada tepat di atas Pemeliharaan Sistem
+        $posKelola = strpos($sidebarAdmin, 'Kelola Akun');
+        $posMaint = strpos($sidebarAdmin, 'Pemeliharaan Sistem');
+        $this->assert('Menu Kelola Akun berada tepat di atas menu Pemeliharaan Sistem', $posKelola !== false && $posMaint !== false && $posKelola < $posMaint);
 
         // 2. KETUA MAJELIS (ketua@yayasan.sch.id): Read All Menu (Seluruh menu tampil di sidebar)
         $ketua = User::where('email', 'ketua@yayasan.sch.id')->first();
@@ -771,6 +778,7 @@ class AppTestCommand extends Command
         $this->assert('Ketua Majelis melihat seluruh menu: Rekapitulasi Usulan Terpadu', str_contains($sidebarKetua, 'Rekapitulasi Usulan'));
         $this->assert('Ketua Majelis melihat seluruh menu: Bank Data NPM', str_contains($sidebarKetua, 'Bank Data NPM'));
         $this->assert('Ketua Majelis melihat seluruh menu: Riwayat Mutasi', str_contains($sidebarKetua, 'Riwayat Mutasi'));
+        $this->assert('Ketua Majelis: Menu Kelola Akun disembunyikan', !str_contains($sidebarKetua, 'Kelola Akun'));
         $this->assert('Ketua Majelis: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarKetua, 'Pemeliharaan Sistem'));
 
         // 3. PETUGAS TU UNIT (tu.sd@sekolah.sch.id): Sembunyikan menu pusat & proteksi rute
@@ -800,9 +808,14 @@ class AppTestCommand extends Command
         $this->assert('Sidebar TU: Menu Rekapitulasi Usulan disembunyikan', !str_contains($sidebarTu, 'Rekapitulasi Usulan'));
         $this->assert('Sidebar TU: Menu Bank Data NPM disembunyikan', !str_contains($sidebarTu, 'Bank Data NPM'));
         $this->assert('Sidebar TU: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarTu, 'Riwayat Mutasi'));
+        $this->assert('Sidebar TU: Menu Kelola Akun disembunyikan', !str_contains($sidebarTu, 'Kelola Akun'));
         $this->assert('Sidebar TU: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarTu, 'Pemeliharaan Sistem'));
 
         // Proteksi Direct URL bagi TU (HTTP 403 Forbidden)
+        $reqTuUsers = Request::create('/users', 'GET');
+        app()->instance('request', $reqTuUsers);
+        $this->assert('TU dilarang mengakses Kelola Akun via URL (HTTP 403)', $kernel->handle($reqTuUsers)->getStatusCode() === 403);
+
         $reqTuNpm = Request::create('/master-npms', 'GET');
         app()->instance('request', $reqTuNpm);
         $this->assert('TU dilarang mengakses Bank Data NPM via URL (HTTP 403)', $kernel->handle($reqTuNpm)->getStatusCode() === 403);
@@ -857,9 +870,14 @@ class AppTestCommand extends Command
         $this->assert('Sidebar Pegawai: Menu Profil Unit Kerja Saya disembunyikan', !str_contains($sidebarGuru, 'Profil Unit Kerja Saya'));
         $this->assert('Sidebar Pegawai: Menu Bank Data NPM disembunyikan', !str_contains($sidebarGuru, 'Bank Data NPM'));
         $this->assert('Sidebar Pegawai: Menu Riwayat Mutasi disembunyikan', !str_contains($sidebarGuru, 'Riwayat Mutasi'));
+        $this->assert('Sidebar Pegawai: Menu Kelola Akun disembunyikan', !str_contains($sidebarGuru, 'Kelola Akun'));
         $this->assert('Sidebar Pegawai: Menu Pemeliharaan Sistem disembunyikan', !str_contains($sidebarGuru, 'Pemeliharaan Sistem'));
 
         // Proteksi Direct URL bagi Pegawai (HTTP 403 Forbidden)
+        $reqGuruUsers = Request::create('/users', 'GET');
+        app()->instance('request', $reqGuruUsers);
+        $this->assert('Pegawai dilarang mengakses Kelola Akun via URL (HTTP 403)', $kernel->handle($reqGuruUsers)->getStatusCode() === 403);
+
         $reqGuruAudit = Request::create('/audits/quarterly', 'GET');
         app()->instance('request', $reqGuruAudit);
         $this->assert('Pegawai dilarang mengakses Pembaruan Data Berkala via URL (HTTP 403)', $kernel->handle($reqGuruAudit)->getStatusCode() === 403);
@@ -988,6 +1006,116 @@ class AppTestCommand extends Command
         $resUp = $maintController->toggle($reqUp);
         $this->assert('Penonaktifan Maintenance Mode via Controller berhasil (Redirect 302)', $resUp->isRedirect());
         $this->assert('Aplikasi kembali LIVE (isDownForMaintenance() FALSE)', !app()->isDownForMaintenance());
+    }
+
+    private function testUserManagementModule(): void
+    {
+        $this->newLine();
+        $this->comment('▶ FASE 12: Pengujian Modul Kelola Akun (User Management, Reset Password & Double Confirmation Delete)');
+
+        $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
+        $userController = app()->make(\App\Http\Controllers\UserController::class);
+
+        // 1. Verifikasi Privilege canManageUsers()
+        $adminUtama = User::where('email', 'admin@yayasan.sch.id')->first();
+        $itSupport = User::where('email', 'hr@yayasan.sch.id')->first();
+        $ketua = User::where('email', 'ketua@yayasan.sch.id')->first();
+        $tu = User::where('email', 'tu.sd@sekolah.sch.id')->first();
+        $guru = User::where('email', 'rahmat.guru@sekolah.sch.id')->first();
+
+        $this->assert('Admin Utama memiliki hak canManageUsers()', $adminUtama->canManageUsers());
+        $this->assert('IT Support / Admin Yayasan memiliki hak canManageUsers()', $itSupport->canManageUsers());
+        $this->assert('Ketua Majelis TIDAK memiliki hak canManageUsers()', !$ketua->canManageUsers());
+        $this->assert('Petugas TU Unit TIDAK memiliki hak canManageUsers()', !$tu->canManageUsers());
+        $this->assert('Pegawai Guru TIDAK memiliki hak canManageUsers()', !$guru->canManageUsers());
+
+        // 2. Akses Halaman Kelola Akun oleh Admin Utama (HTTP 200)
+        Auth::login($adminUtama);
+        $reqAdminUsers = Request::create('/users', 'GET');
+        app()->instance('request', $reqAdminUsers);
+        $resAdminUsers = $kernel->handle($reqAdminUsers);
+        $htmlAdminUsers = $resAdminUsers->getContent();
+
+        $this->assert('Admin Utama dapat mengakses Halaman Kelola Akun (HTTP 200)', $resAdminUsers->getStatusCode() === 200);
+        $this->assert('Halaman memuat judul Kelola Akun Pengguna', str_contains($htmlAdminUsers, 'Kelola Akun Pengguna'));
+        $this->assert('Halaman memuat tombol Tambah Akun Baru', str_contains($htmlAdminUsers, 'Tambah Akun Baru'));
+        $this->assert('Halaman memuat modal Reset Kata Sandi', str_contains($htmlAdminUsers, 'Reset Kata Sandi'));
+        $this->assert('Halaman memuat modal Dobel Konfirmasi Penghapusan', str_contains($htmlAdminUsers, 'Dobel Konfirmasi Penghapusan'));
+
+        // 3. Akses Halaman Kelola Akun oleh Admin Yayasan / SDM (HTTP 200)
+        Auth::login($itSupport);
+        $reqItUsers = Request::create('/users', 'GET');
+        app()->instance('request', $reqItUsers);
+        $resItUsers = $kernel->handle($reqItUsers);
+        $this->assert('Admin Yayasan / SDM dapat mengakses Halaman Kelola Akun (HTTP 200)', $resItUsers->getStatusCode() === 200);
+
+        // 4. Pembatasan Akses URL untuk Non-Admin (HTTP 403 Forbidden)
+        Auth::login($ketua);
+        $reqKetuaUsers = Request::create('/users', 'GET');
+        app()->instance('request', $reqKetuaUsers);
+        $this->assert('Ketua Majelis DITOLAK mengakses Halaman Kelola Akun (HTTP 403)', $kernel->handle($reqKetuaUsers)->getStatusCode() === 403);
+
+        // 5. Pengujian Tambah Akun Baru (Add User)
+        Auth::login($adminUtama);
+        User::where('username', 'testuser26')->delete(); // Bersihkan jika ada
+
+        $reqCreateUser = Request::create('/users', 'POST', [
+            'name' => 'TU SMP MUHAMMADIYAH UJI',
+            'username' => 'testuser26',
+            'email' => 'testuser26@sekolah.sch.id',
+            'role' => 'tu',
+            'password' => 'PASW26',
+            'is_active' => '1',
+        ]);
+        $resCreateUser = $userController->store($reqCreateUser);
+        $this->assert('Aksi Tambah Akun Pengguna berhasil dieksekusi (Redirect 302)', $resCreateUser->isRedirect());
+
+        $createdUser = User::where('username', 'testuser26')->first();
+        $this->assert('Akun baru tersimpan di database dengan kredensial sah', $createdUser !== null && $createdUser->name === 'TU SMP MUHAMMADIYAH UJI');
+        $this->assert('Autentikasi akun baru via password sah berhasil', Auth::attempt(['username' => 'testuser26', 'password' => 'PASW26']));
+
+        // 6. Pengujian Reset Kata Sandi (Reset Password)
+        Auth::login($adminUtama);
+        $reqResetPass = Request::create("/users/{$createdUser->id}/reset-password", 'POST', [
+            'new_password' => 'BARU26',
+        ]);
+        $resResetPass = $userController->resetPassword($reqResetPass, $createdUser);
+        $this->assert('Aksi Reset Kata Sandi berhasil dieksekusi (Redirect 302)', $resResetPass->isRedirect());
+        $this->assert('Autentikasi akun dengan kata sandi lama ditolak', !Auth::attempt(['username' => 'testuser26', 'password' => 'PASW26']));
+        $this->assert('Autentikasi akun dengan kata sandi baru (BARU26) berhasil', Auth::attempt(['username' => 'testuser26', 'password' => 'BARU26']));
+
+        // 7. Pengujian Toggle Status Aktif/Nonaktif
+        Auth::login($adminUtama);
+        $reqToggle = Request::create("/users/{$createdUser->id}/toggle-status", 'POST');
+        $userController->toggleStatus($reqToggle, $createdUser);
+        $createdUser->refresh();
+        $this->assert('Status akun berhasil dinonaktifkan (is_active false)', !$createdUser->is_active);
+
+        $userController->toggleStatus($reqToggle, $createdUser);
+        $createdUser->refresh();
+        $this->assert('Status akun berhasil diaktifkan kembali (is_active true)', $createdUser->is_active);
+
+        // 8. Pengujian Dobel Konfirmasi Hapus Akun (Delete User)
+        // A. Coba hapus akun sendiri (dilarang sistem)
+        $reqDeleteSelf = Request::create("/users/{$adminUtama->id}", 'DELETE', ['confirm_delete' => 'HAPUS']);
+        $resDeleteSelf = $userController->destroy($reqDeleteSelf, $adminUtama);
+        $this->assert('Penghapusan akun sendiri dicegah oleh sistem', session('error') !== null);
+
+        // B. Coba hapus tanpa dobel konfirmasi 'HAPUS' (harus gagal validasi)
+        $failedWithoutConfirm = false;
+        try {
+            $reqDeleteWithoutConfirm = Request::create("/users/{$createdUser->id}", 'DELETE', ['confirm_delete' => 'SALAH']);
+            $userController->destroy($reqDeleteWithoutConfirm, $createdUser);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $failedWithoutConfirm = true;
+        }
+        $this->assert('Penghapusan tanpa kata kunci konfirmasi "HAPUS" ditolak validasi', $failedWithoutConfirm);
+
+        // C. Hapus dengan dobel konfirmasi sah ('confirm_delete' => 'HAPUS')
+        $reqDeleteValid = Request::create("/users/{$createdUser->id}", 'DELETE', ['confirm_delete' => 'HAPUS']);
+        $resDeleteValid = $userController->destroy($reqDeleteValid, $createdUser);
+        $this->assert('Aksi Hapus Akun dengan dobel konfirmasi berhasil (Redirect 302)', $resDeleteValid->isRedirect());
+        $this->assert('Akun pengguna telah dihapus permanen dari database', User::where('username', 'testuser26')->doesntExist());
     }
 
     private function testLogout(): void
