@@ -23,30 +23,30 @@ class DatabaseSeeder extends Seeder
 
         // 2. Akun Superadmin & Eksekutif Yayasan
         $admin = User::create([
-            'name' => 'IT Support Yayasan',
+            'name' => 'Admin Utama PDM',
             'email' => 'admin@yayasan.sch.id',
             'username' => 'admin',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ADMN26'),
             'role' => User::ROLE_ADMIN,
             'unit_id' => null,
             'is_active' => true,
         ]);
 
         $ketua = User::create([
-            'name' => 'Dr. H. Ahmad Dahlan, M.Pd.',
+            'name' => 'Ketua Majelis Dikdasmen PDM',
             'email' => 'ketua@yayasan.sch.id',
             'username' => 'ketuayayasan',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('MAJL26'),
             'role' => User::ROLE_YAYASAN,
             'unit_id' => null,
             'is_active' => true,
         ]);
 
         $hrPusat = User::create([
-            'name' => 'Siti Nurhaliza, S.Psi.',
+            'name' => 'Admin Bidang SDM Dikdasmen',
             'email' => 'hr@yayasan.sch.id',
             'username' => 'hrpusat',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('YAYS26'),
             'role' => User::ROLE_HR_PUSAT,
             'unit_id' => null,
             'is_active' => true,
@@ -54,20 +54,20 @@ class DatabaseSeeder extends Seeder
 
         // 3. Akun Unit (Kepsek & TU SD)
         $kepsekSD = User::create([
-            'name' => 'Dra. Endang Lestari, M.Pd.',
+            'name' => 'Kepala SD Muhammadiyah Sapen 1',
             'email' => 'kepsek.sd@sekolah.sch.id',
             'username' => 'kepseksd',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('KPSK26'),
             'role' => User::ROLE_KEPSEK,
             'unit_id' => $sd->id,
             'is_active' => true,
         ]);
 
         $tuSD = User::create([
-            'name' => 'Budi Setiawan, A.Md.',
+            'name' => 'TU ' . $sd->name,
             'email' => 'tu.sd@sekolah.sch.id',
-            'username' => 'tusd',
-            'password' => Hash::make('password'),
+            'username' => $sd->npsn ?: '20403327',
+            'password' => Hash::make($sd->npsn ?: '20403327'),
             'role' => User::ROLE_TU,
             'unit_id' => $sd->id,
             'is_active' => true,
@@ -75,10 +75,10 @@ class DatabaseSeeder extends Seeder
 
         // 4. Sample Data Pegawai (Guru, Tendik, Karyawan)
         $guruUser = User::create([
-            'name' => 'Rahmat Hidayat, S.Pd.',
+            'name' => 'Guru SD Muhammadiyah Sapen 1',
             'email' => 'rahmat.guru@sekolah.sch.id',
             'username' => 'rahmatguru',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('GURU26'),
             'role' => User::ROLE_PEGAWAI,
             'unit_id' => $sd->id,
             'is_active' => true,

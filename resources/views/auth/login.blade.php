@@ -145,7 +145,7 @@
                         
                         <div>
                             <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                                Email atau Username
+                                Email, NPSN, atau Username
                             </label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-500/70">
@@ -153,7 +153,7 @@
                                 </div>
                                 <input type="text" name="email" id="email" value="{{ old('email') }}" required autofocus
                                     class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-emerald-900/70 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-amber-400 transition text-sm font-medium"
-                                    placeholder="nama@sekolah.sch.id / username">
+                                    placeholder="Email, NPSN, atau username">
                             </div>
                         </div>
 

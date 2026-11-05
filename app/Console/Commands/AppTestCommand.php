@@ -197,29 +197,68 @@ class AppTestCommand extends Command
         }
         $this->assert('Rute /quick-login diblokir dan mengembalikan status HTTP 403 Forbidden', $quickBlocked);
 
-        // 4. Standar Autentikasi Pengguna Resmi
-        $roles = [
-            'admin@yayasan.sch.id' => 'IT Support (Admin)',
-            'ketua@yayasan.sch.id' => 'Ketua Yayasan',
-            'hr@yayasan.sch.id' => 'HR Pusat',
-            'kepsek.sd@sekolah.sch.id' => 'Kepala Sekolah SD',
-            'tu.sd@sekolah.sch.id' => 'Tata Usaha SD',
-            'rahmat.guru@sekolah.sch.id' => 'Guru SD (ESS)',
+        // 4. Standar Autentikasi Pengguna Resmi & Format Kredensial Baru
+        $testAccounts = [
+            [
+                'email' => 'admin@yayasan.sch.id',
+                'username' => 'admin',
+                'password' => 'ADMN26',
+                'label' => 'Admin Utama PDM',
+            ],
+            [
+                'email' => 'ketua@yayasan.sch.id',
+                'username' => 'ketuayayasan',
+                'password' => 'MAJL26',
+                'label' => 'Ketua Majelis Dikdasmen PDM',
+            ],
+            [
+                'email' => 'hr@yayasan.sch.id',
+                'username' => 'hrpusat',
+                'password' => 'YAYS26',
+                'label' => 'Admin Bidang SDM Dikdasmen',
+            ],
+            [
+                'email' => 'kepsek.sd@sekolah.sch.id',
+                'username' => 'kepseksd',
+                'password' => 'KPSK26',
+                'label' => 'Kepala SD Muhammadiyah Sapen 1',
+            ],
+            [
+                'email' => 'tu.sd@sekolah.sch.id',
+                'username' => '20403327',
+                'password' => '20403327',
+                'label' => 'TU SD MUHAMMADIYAH SAPEN 1 (NPSN)',
+            ],
+            [
+                'email' => 'rahmat.guru@sekolah.sch.id',
+                'username' => 'rahmatguru',
+                'password' => 'GURU26',
+                'label' => 'Guru SD Muhammadiyah Sapen 1',
+            ],
         ];
 
-        foreach ($roles as $email => $label) {
-            $user = User::where('email', $email)->first();
-            $this->assert("Pengguna {$label} ({$email}) terdaftar", $user !== null);
+        foreach ($testAccounts as $account) {
+            $user = User::where('email', $account['email'])->first();
+            $this->assert("Pengguna {$account['label']} ({$account['email']}) terdaftar", $user !== null);
 
             if ($user) {
                 // Verifikasi kegagalan jika password salah
-                $this->assert("Autentikasi {$label} dengan password salah ditolak", !Auth::attempt(['email' => $email, 'password' => 'wrong-pass-123']));
+                $this->assert("Autentikasi {$account['label']} dengan password salah ditolak", !Auth::attempt(['email' => $account['email'], 'password' => 'wrong-pass-123']));
 
-                // Autentikasi sukses dengan kredensial sah
-                $authOk = Auth::attempt(['email' => $email, 'password' => 'password']);
-                $this->assert("Autentikasi akun resmi {$label} berhasil", $authOk && Auth::id() === $user->id);
+                // Autentikasi via Email & Password Baru
+                $authEmailOk = Auth::attempt(['email' => $account['email'], 'password' => $account['password']]);
+                $this->assert("Autentikasi akun {$account['label']} via email ({$account['email']}) berhasil", $authEmailOk && Auth::id() === $user->id);
+
+                // Autentikasi via Username / NPSN & Password Baru
+                $authUsernameOk = Auth::attempt(['username' => $account['username'], 'password' => $account['password']]);
+                $this->assert("Autentikasi akun {$account['label']} via username/NPSN ({$account['username']}) berhasil", $authUsernameOk && Auth::id() === $user->id);
             }
         }
+
+        // Verifikasi nama pengguna tidak lagi memakai nama artis/tokoh bersejarah
+        $names = User::pluck('name')->implode(' ');
+        $this->assert('Nama pengguna bersih dari nama tokoh (Ahmad Dahlan)', !str_contains($names, 'Ahmad Dahlan'));
+        $this->assert('Nama pengguna bersih dari nama artis (Siti Nurhaliza)', !str_contains($names, 'Siti Nurhaliza'));
     }
 
     private function testRoleBasedAccessControl(): void
