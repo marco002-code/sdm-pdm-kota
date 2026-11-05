@@ -22,7 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'maintenance',
             'maintenance/*',
             'login',
-            'quick-login',
             'logout',
             'up',
         ]);

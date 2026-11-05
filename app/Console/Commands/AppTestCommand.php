@@ -162,25 +162,42 @@ class AppTestCommand extends Command
     private function testAuthentication(): void
     {
         $this->newLine();
-        $this->comment('▶ FASE 3: Pengujian Autentikasi & Quick Login');
+        $this->comment('▶ FASE 3: Pengujian Autentikasi Resmi & Penonaktifan Mode Demo');
 
         $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
 
         // 1. Guest access on root (Landing Page) & Protected Dashboard
         $reqRoot = Request::create('/', 'GET');
         $resRoot = $kernel->handle($reqRoot);
+        $htmlRoot = $resRoot->getContent();
         $this->assert('Halaman root (/) dapat diakses publik sebagai Landing Page (HTTP 200)', $resRoot->getStatusCode() === 200);
+        $this->assert('Tombol akses demo publik telah dihapus dari Landing Page', !str_contains($htmlRoot, 'Akses Uji Coba (Akun Demo)'));
 
         $reqDash = Request::create('/dashboard', 'GET');
         $resDash = $kernel->handle($reqDash);
         $this->assert('Akses /dashboard tanpa login diarahkan ke login (HTTP 302)', $resDash->getStatusCode() === 302 && str_contains($resDash->headers->get('Location'), 'login'));
 
-        // 2. Login page accessibility
+        // 2. Login page security checks
         $reqLogin = Request::create('/login', 'GET');
         $resLogin = $kernel->handle($reqLogin);
+        $htmlLogin = $resLogin->getContent();
         $this->assert('Halaman login dapat diakses publik (HTTP 200)', $resLogin->getStatusCode() === 200);
+        $this->assert('Tab panel demo 1-click telah dinonaktifkan dari halaman login', !str_contains($htmlLogin, 'Akses Demo (1-Click)'));
+        $this->assert('Teks password demo telah dibersihkan dari halaman login', !str_contains($htmlLogin, 'Pusat Uji Coba Terpadu'));
+        $this->assert('Input kata sandi tidak memuat hardcoded password bawaan', !str_contains($htmlLogin, 'value="password"'));
 
-        // 3. Quick Login test for each demo role
+        // 3. Penonaktifan Rute Quick Login (HTTP 403 Forbidden)
+        $authController = app()->make(\App\Http\Controllers\AuthController::class);
+        $quickBlocked = false;
+        try {
+            $reqQuick = Request::create('/quick-login', 'POST', ['email' => 'admin@yayasan.sch.id']);
+            $authController->quickLogin($reqQuick);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $quickBlocked = ($e->getStatusCode() === 403);
+        }
+        $this->assert('Rute /quick-login diblokir dan mengembalikan status HTTP 403 Forbidden', $quickBlocked);
+
+        // 4. Standar Autentikasi Pengguna Resmi
         $roles = [
             'admin@yayasan.sch.id' => 'IT Support (Admin)',
             'ketua@yayasan.sch.id' => 'Ketua Yayasan',
@@ -192,13 +209,15 @@ class AppTestCommand extends Command
 
         foreach ($roles as $email => $label) {
             $user = User::where('email', $email)->first();
-            $this->assert("Pengguna demo {$label} ({$email}) terdaftar", $user !== null);
+            $this->assert("Pengguna {$label} ({$email}) terdaftar", $user !== null);
 
             if ($user) {
-                $reqQuick = Request::create('/quick-login', 'POST', ['email' => $email]);
-                // Ensure CSRF middleware doesn't block internal subrequest or mock auth
-                Auth::login($user);
-                $this->assert("Autentikasi role {$label} berhasil", Auth::check() && Auth::id() === $user->id);
+                // Verifikasi kegagalan jika password salah
+                $this->assert("Autentikasi {$label} dengan password salah ditolak", !Auth::attempt(['email' => $email, 'password' => 'wrong-pass-123']));
+
+                // Autentikasi sukses dengan kredensial sah
+                $authOk = Auth::attempt(['email' => $email, 'password' => 'password']);
+                $this->assert("Autentikasi akun resmi {$label} berhasil", $authOk && Auth::id() === $user->id);
             }
         }
     }

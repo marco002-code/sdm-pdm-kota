@@ -110,13 +110,10 @@
         </p>
 
         <!-- Tombol Aksi Utama -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-14">
-            <a href="{{ route('login') }}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-900/60 border border-amber-400/40 hover:scale-[1.01] active:scale-[0.99] transition duration-150 flex items-center justify-center gap-2 group">
+        <div class="flex items-center justify-center mb-14">
+            <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-900/60 border border-amber-400/40 hover:scale-[1.01] active:scale-[0.99] transition duration-150 flex items-center justify-center gap-2 group">
                 <span>Masuk ke Portal Kepegawaian</span>
                 <svg class="w-4 h-4 text-amber-300 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-            <a href="{{ route('login') }}?demo=1" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/60 border border-emerald-600/40 text-slate-200 hover:text-amber-300 font-semibold text-sm transition duration-150 backdrop-blur-sm">
-                Akses Uji Coba (Akun Demo)
             </a>
         </div>
 

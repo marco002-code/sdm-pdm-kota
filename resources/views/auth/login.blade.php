@@ -94,19 +94,13 @@
             <!-- Main Auth Card -->
             <div class="bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-emerald-950/80 border border-emerald-900/60 overflow-hidden">
                 
-                <!-- Tab Selector: Masuk Akun vs Demo Reviewer -->
-                <div class="flex border-b border-emerald-950 bg-slate-950/70 p-1.5 gap-1.5">
-                    <button type="button" onclick="switchAuthTab('credentials')" id="tabBtnCredentials"
-                        class="flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-amber-200 shadow-md shadow-emerald-950/50 border border-amber-400/30">
-                        <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        <span>Masuk Akun Resmi</span>
-                    </button>
-                    <button type="button" onclick="switchAuthTab('demo')" id="tabBtnDemo"
-                        class="flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-amber-300 hover:bg-slate-800/80">
-                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>Akses Demo (1-Click)</span>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono font-semibold">Uji Coba</span>
-                    </button>
+                <!-- Card Header -->
+                <div class="px-6 py-4 bg-slate-950/80 border-b border-emerald-950 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">Masuk Akun Resmi Kepegawaian</span>
+                    </div>
+                    <span class="text-[11px] text-slate-400 font-medium">SIM SDM PDM</span>
                 </div>
 
                 <!-- Flash & Alert Messages -->
@@ -144,8 +138,8 @@
                     @endif
                 </div>
 
-                <!-- TAB CONTENT 1: MASUK KREDENSIAL RESMI -->
-                <div id="tabContentCredentials" class="p-6 sm:p-8 pt-4">
+                <!-- FORM MASUK KREDENSIAL RESMI -->
+                <div class="p-6 sm:p-8 pt-4">
                     <form action="{{ route('login.post') }}" method="POST" class="space-y-5" id="loginForm">
                         @csrf
                         
@@ -157,7 +151,7 @@
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-500/70">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/></svg>
                                 </div>
-                                <input type="text" name="email" id="email" value="{{ old('email', 'admin@yayasan.sch.id') }}" required autofocus
+                                <input type="text" name="email" id="email" value="{{ old('email') }}" required autofocus
                                     class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-emerald-900/70 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-amber-400 transition text-sm font-medium"
                                     placeholder="nama@sekolah.sch.id / username">
                             </div>
@@ -176,9 +170,9 @@
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-500/70">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                 </div>
-                                <input type="password" name="password" id="password" value="password" required
+                                <input type="password" name="password" id="password" value="" required
                                     class="w-full pl-10 pr-12 py-3 bg-slate-950 border border-emerald-900/70 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-amber-400 transition text-sm font-medium"
-                                    placeholder="••••••••">
+                                    placeholder="Masukkan kata sandi akun Anda">
                                 <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-amber-300 transition" aria-label="Lihat kata sandi">
                                     <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </button>
@@ -202,118 +196,7 @@
                             <svg class="w-4 h-4 text-amber-300 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </form>
-
-                    <!-- Notice & Fast-Switch to Demo -->
-                    <div class="mt-6 pt-5 border-t border-emerald-950 text-center">
-                        <p class="text-xs text-slate-400 mb-2">
-                            Sedang melakukan pengujian atau simulasi evaluasi sistem?
-                        </p>
-                        <button type="button" onclick="switchAuthTab('demo')" class="text-xs font-semibold text-amber-400 hover:text-yellow-300 underline underline-offset-2 flex items-center justify-center gap-1.5 mx-auto group">
-                            <span>Buka Panel Akses Cepat Akun Demo (1-Click)</span>
-                            <span class="group-hover:translate-x-0.5 transition">→</span>
-                        </button>
-                    </div>
                 </div>
-
-                <!-- TAB CONTENT 2: MODE PENGUJIAN / AKUN DEMO -->
-                <div id="tabContentDemo" class="hidden p-6 sm:p-8 pt-4 space-y-6">
-                    
-                    <div class="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-600/40 text-xs text-emerald-200 flex items-start gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="leading-relaxed">
-                            <strong class="font-bold text-amber-300">Pusat Uji Coba Terpadu:</strong>
-                            Pilih salah satu peran pengguna di bawah untuk login langsung tanpa perlu mengetik kata sandi (semua akun demo menggunakan sandi: <code class="bg-emerald-900/80 px-1 py-0.5 rounded font-mono text-amber-300 border border-emerald-700/50">password</code>).
-                        </div>
-                    </div>
-
-                    <!-- 1. Enam Akun Utama Pusat & Pimpinan -->
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                                <span>Akun Utama & Pimpinan Eksekutif</span>
-                            </h2>
-                            <span class="text-[10px] text-emerald-400 font-medium">Pusat, Yayasan & Unit</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            @foreach ($demoUsers as $demo)
-                                <form action="{{ route('login.quick') }}" method="POST" class="m-0">
-                                    @csrf
-                                    <input type="hidden" name="email" value="{{ $demo['email'] }}">
-                                    <button type="submit"
-                                        class="w-full text-left p-3 rounded-2xl bg-slate-950 border border-emerald-950 hover:border-amber-400/50 hover:bg-emerald-950/30 transition duration-150 group">
-                                        <div class="flex items-start justify-between gap-1 mb-1">
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border {{ $demo['badge_color'] }}">
-                                                {{ $demo['role_title'] }}
-                                            </span>
-                                            <span class="text-[10px] text-slate-400 group-hover:text-amber-300 transition font-medium">
-                                                {{ $demo['level'] }}
-                                            </span>
-                                        </div>
-                                        <div class="font-bold text-white text-xs truncate group-hover:text-amber-200 transition">
-                                            {{ $demo['name'] }}
-                                        </div>
-                                        <div class="text-[11px] text-emerald-400/80 truncate mt-0.5 font-mono">
-                                            {{ $demo['email'] }}
-                                        </div>
-                                        <div class="text-[10px] text-slate-400 mt-2 flex items-center justify-between border-t border-emerald-950 pt-1.5">
-                                            <span class="italic text-slate-400 truncate max-w-[170px]">{{ $demo['desc'] }}</span>
-                                            <span class="font-mono text-amber-400 group-hover:text-yellow-300 group-hover:translate-x-0.5 transition font-bold flex-shrink-0">Masuk →</span>
-                                        </div>
-                                    </button>
-                                </form>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- 2. Selector Tata Usaha (76 AUM) -->
-                    <div class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-600/50">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                                    Operator Tata Usaha (76 AUM)
-                                </span>
-                            </div>
-                            <span class="text-[10px] text-amber-300 font-mono bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">Lengkap 76 Unit</span>
-                        </div>
-                        <p class="text-[11px] text-slate-300 mb-3">
-                            Pilih nama sekolah untuk masuk sebagai operator TU dengan hak akses input biodata & validasi Master NPM unit tersebut.
-                        </p>
-
-                        <form action="{{ route('login.quick') }}" method="POST" id="tuQuickForm" class="space-y-2">
-                            @csrf
-                            <div>
-                                <select name="email" id="tuSelect" onchange="updateTuEmail(this.value)"
-                                    class="w-full px-3.5 py-2.5 text-xs bg-slate-950 border border-emerald-700/60 rounded-xl text-white font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                    <option value="">-- Pilih Satuan Pendidikan / AUM untuk Login TU --</option>
-                                    @foreach($allTuUsers as $tuUser)
-                                        <option value="{{ $tuUser->email }}">
-                                            [{{ $tuUser->unit->level ?? 'Unit' }}] {{ $tuUser->unit->name ?? 'Unit' }} • {{ $tuUser->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="flex items-center justify-between gap-2 pt-1">
-                                <button type="button" onclick="fillSelectedTuToMainForm()" class="text-[11px] text-amber-400 hover:text-yellow-300 hover:underline font-semibold">
-                                    Salin ke Form Utama
-                                </button>
-                                <button type="submit" id="tuLoginBtn"
-                                    class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs rounded-xl border border-amber-400/30 shadow-md shadow-emerald-950/50 transition flex items-center justify-center gap-1.5 flex-shrink-0">
-                                    <span>Masuk Sebagai TU Unit</span>
-                                    <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Return to credentials button -->
-                    <div class="text-center pt-2">
-                        <button type="button" onclick="switchAuthTab('credentials')" class="text-xs text-emerald-400 hover:text-amber-300 font-semibold underline underline-offset-2">
-                            ← Kembali ke Form Masuk Kredensial
-                        </button>
-                    </div>
 
                 </div>
 
@@ -364,27 +247,6 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        function switchAuthTab(tab) {
-            const btnCreds = document.getElementById('tabBtnCredentials');
-            const btnDemo = document.getElementById('tabBtnDemo');
-            const contentCreds = document.getElementById('tabContentCredentials');
-            const contentDemo = document.getElementById('tabContentDemo');
-
-            if (tab === 'credentials') {
-                btnCreds.className = 'flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-amber-200 shadow-md shadow-emerald-950/50 border border-amber-400/30';
-                btnDemo.className = 'flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-amber-300 hover:bg-slate-800/80';
-
-                contentCreds.classList.remove('hidden');
-                contentDemo.classList.add('hidden');
-            } else {
-                btnDemo.className = 'flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/20';
-                btnCreds.className = 'flex-1 py-2.5 px-4 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-emerald-300 hover:bg-slate-800/80';
-
-                contentCreds.classList.add('hidden');
-                contentDemo.classList.remove('hidden');
-            }
-        }
-
         function togglePasswordVisibility() {
             const pwd = document.getElementById('password');
             const eyeIcon = document.getElementById('eyeIcon');
@@ -395,21 +257,6 @@
                 pwd.type = 'password';
                 eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
             }
-        }
-
-        function updateTuEmail(email) {
-            // Optional callback
-        }
-
-        function fillSelectedTuToMainForm() {
-            const sel = document.getElementById('tuSelect');
-            if (!sel.value) {
-                alert('Silakan pilih salah satu unit sekolah terlebih dahulu.');
-                return;
-            }
-            document.getElementById('email').value = sel.value;
-            document.getElementById('password').value = 'password';
-            switchAuthTab('credentials');
         }
 
         function openForgotModal() {
@@ -423,13 +270,6 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('demo') === '1') {
-                switchAuthTab('demo');
-            }
-        });
     </script>
 </body>
 </html>
