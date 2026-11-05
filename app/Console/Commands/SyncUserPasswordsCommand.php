@@ -179,6 +179,18 @@ class SyncUserPasswordsCommand extends Command
             $this->info("✔ Berhasil menyelaraskan {$tuCount} akun Petugas TU Unit (Username = NPSN & Password = NPSN)");
         }
 
+        // Perbarui identitas resmi Unit PDM Kota Yogyakarta (Website & Email Kontak)
+        Unit::where('code', 'YAYASAN')
+            ->orWhere('name', 'like', '%Kantor PDM%')
+            ->orWhere('name', 'like', '%Dikdasmen%')
+            ->update([
+                'website' => 'https://pdmjogja.org',
+                'email' => 'pdmjogja13@gmail.com',
+                'district' => 'Kec. Pakualaman',
+                'village' => 'Gunungketur',
+            ]);
+        $this->info('✔ Identitas Unit PDM Kota Yogyakarta diperbarui: Website (https://pdmjogja.org) & Email (pdmjogja13@gmail.com)');
+
         $this->table(
             ['Role', 'Nama Akun', 'Username', 'Email', 'Password', 'Status Database'],
             $tableRows
@@ -191,3 +203,4 @@ class SyncUserPasswordsCommand extends Command
         return Command::SUCCESS;
     }
 }
+

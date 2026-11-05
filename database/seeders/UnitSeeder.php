@@ -19,11 +19,11 @@ class UnitSeeder extends Seeder
                 'npsn' => null,
                 'name' => 'Kantor PDM Kota Yogyakarta (Majelis Dikdasmen & PNF)',
                 'level' => 'YAYASAN',
-                'district' => 'Kec. Ngampilan',
-                'website' => null,
+                'district' => 'Kec. Pakualaman',
+                'website' => 'https://pdmjogja.org',
                 'address' => 'Jl. Sultan Agung No. 14, Kota Yogyakarta',
                 'phone' => '0274-374775',
-                'email' => 'dikdasmen@pdmjogja.org',
+                'email' => 'pdmjogja13@gmail.com',
                 'principal_name' => 'Ketua Majelis Dikdasmen PNF',
             ],
 
@@ -657,6 +657,8 @@ class UnitSeeder extends Seeder
         Unit::where('code', 'YAYASAN')->update([
             'village' => 'Gunungketur',
             'district' => 'Kec. Pakualaman',
+            'website' => 'https://pdmjogja.org',
+            'email' => 'pdmjogja13@gmail.com',
             'accreditation' => 'Institusi A',
         ]);
     }

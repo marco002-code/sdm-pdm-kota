@@ -80,7 +80,11 @@
             </div>
         </a>
 
-        <div>
+        <div class="flex items-center gap-3">
+            <a href="https://pdmjogja.org" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-300/90 hover:text-white hover:bg-emerald-950/60 transition border border-emerald-800/40">
+                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                <span>pdmjogja.org</span>
+            </a>
             @auth
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-amber-200 hover:text-white font-bold text-xs shadow-md shadow-emerald-950/50 border border-amber-400/30 transition duration-150">
                     <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -162,7 +166,14 @@
 
     <!-- 3. FOOTER RINGKAS -->
     <footer class="relative z-10 w-full border-t border-emerald-950/80 py-5 text-center text-xs text-slate-400">
-        <p>&copy; {{ date('Y') }} Pimpinan Daerah Muhammadiyah Kota Yogyakarta • Majelis Dikdasmen & PNF</p>
+        <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>&copy; {{ date('Y') }} Pimpinan Daerah Muhammadiyah Kota Yogyakarta • Majelis Dikdasmen & PNF</p>
+            <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                <a href="https://pdmjogja.org" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 transition underline underline-offset-2">pdmjogja.org</a>
+                <span>•</span>
+                <a href="mailto:pdmjogja13@gmail.com" class="hover:text-slate-200 transition">pdmjogja13@gmail.com</a>
+            </div>
+        </div>
     </footer>
 
 </body>

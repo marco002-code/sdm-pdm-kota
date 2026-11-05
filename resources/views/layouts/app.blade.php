@@ -335,6 +335,18 @@
             <div class="p-3 lg:px-4 lg:py-2.5 flex-1">
                 @yield('content')
             </div>
+
+            <!-- Footer Aplikasi -->
+            <footer class="mt-auto px-6 py-3.5 border-t border-slate-200/80 bg-white/60 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div>
+                    &copy; {{ date('Y') }} <strong>Majelis Dikdasmen & PNF PDM Kota Yogyakarta</strong>
+                </div>
+                <div class="flex items-center gap-3 text-[11px]">
+                    <a href="https://pdmjogja.org" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-medium transition underline underline-offset-2">pdmjogja.org</a>
+                    <span>•</span>
+                    <a href="mailto:pdmjogja13@gmail.com" class="text-slate-500 hover:text-slate-700 transition">pdmjogja13@gmail.com</a>
+                </div>
+            </footer>
         </main>
     </div>
 

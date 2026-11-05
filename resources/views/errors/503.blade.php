@@ -145,8 +145,10 @@
         <div>
             &copy; {{ date('Y') }} <strong>Majelis Dikdasmen & PNF PDM Kota Yogyakarta</strong>. Hak cipta dilindungi undang-undang.
         </div>
-        <div class="text-[11px] text-slate-600">
-            Gedung Dakwah PDM Kota Yogyakarta • Jl. Sultan Agung No. 14, Gunungketur, Pakualaman
+        <div class="text-[11px] text-slate-500 flex items-center gap-2">
+            <a href="https://pdmjogja.org" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 transition underline underline-offset-2">pdmjogja.org</a>
+            <span>•</span>
+            <a href="mailto:pdmjogja13@gmail.com" class="hover:text-slate-300 transition">pdmjogja13@gmail.com</a>
         </div>
     </footer>
 </body>
