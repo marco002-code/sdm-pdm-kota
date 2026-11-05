@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Sistem Informasi SDM PDM Kota Yogyakarta' }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -30,7 +38,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
             <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs text-white shadow-sm shadow-blue-500/30">SDM</div>
+                <img src="{{ asset('images/logo-muhammadiyah.png') }}" alt="Logo Muhammadiyah" class="w-8 h-8 rounded-lg object-contain shadow-sm border border-emerald-500/30 bg-emerald-950 p-0.5">
                 <span class="font-bold text-sm tracking-tight">PDM Kota Yogya</span>
             </div>
         </div>
@@ -61,9 +69,7 @@
             <!-- Sidebar Top: Brand & Close Button (Mobile) -->
             <div class="p-5 border-b border-slate-800 flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-lg text-white shadow-md shadow-blue-500/30">
-                        SDM
-                    </div>
+                    <img src="{{ asset('images/logo-muhammadiyah.png') }}" alt="Logo Muhammadiyah" class="w-10 h-10 rounded-xl object-contain shadow-md shadow-emerald-950/50 border border-emerald-500/30 bg-emerald-950 p-0.5">
                     <div>
                         <div class="font-bold text-base leading-tight">PDM Kota Yogyakarta</div>
                         <div class="text-[11px] text-slate-400 font-medium">Sistem Informasi SDM</div>

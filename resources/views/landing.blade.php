@@ -6,6 +6,13 @@
     <title>SIM-SDM PDM Kota Yogyakarta • Sistem Informasi Manajemen Kepegawaian</title>
     <meta name="description" content="Sistem Informasi Manajemen Sumber Daya Manusia PDM Kota Yogyakarta menaungi 76 Amal Usaha Muhammadiyah (AUM).">
 
+    <!-- Favicon & Touch Icons -->
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -62,9 +69,8 @@
     <!-- 1. HEADER RINGKAS -->
     <header class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
         <a href="{{ route('landing') }}" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-amber-500 flex items-center justify-center text-white font-black text-base shadow-lg shadow-emerald-950/60 border border-amber-400/40 group-hover:scale-105 transition">
-                SDM
-            </div>
+            <img src="{{ asset('images/logo-muhammadiyah.png') }}" alt="Logo Muhammadiyah"
+                class="w-10 h-10 rounded-xl object-contain shadow-lg shadow-emerald-950/60 border border-emerald-500/40 p-0.5 bg-emerald-950/80 group-hover:scale-105 transition">
             <div>
                 <span class="font-extrabold text-base text-white tracking-tight flex items-center gap-1.5">
                     SIM-SDM

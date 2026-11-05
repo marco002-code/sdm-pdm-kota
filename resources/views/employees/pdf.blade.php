@@ -252,6 +252,9 @@
     <!-- KOP SURAT RESMI -->
     <table class="kop-table">
         <tr>
+            <td style="width: 75px; text-align: left; vertical-align: middle;">
+                <img src="{{ public_path('images/logo-muhammadiyah.png') }}" style="width: 65px; height: 65px; object-fit: contain;">
+            </td>
             <td>
                 <div class="kop-title-instansi">Pimpinan Daerah Muhammadiyah Kota Yogyakarta</div>
                 <div class="kop-title-majelis">Majelis Pendidikan Dasar, Menengah dan Pendidikan Nonformal</div>
@@ -266,6 +269,7 @@
                     @endif
                 </div>
             </td>
+            <td style="width: 75px;"></td>
         </tr>
     </table>
 

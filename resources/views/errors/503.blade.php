@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Dalam Pemeliharaan • SIM SDM PDM Kota Yogyakarta</title>
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,9 +42,7 @@
     <!-- 1. TOP HEADER BRAND -->
     <header class="relative z-10 w-full max-w-5xl mx-auto px-6 py-6 flex items-center justify-between border-b border-slate-800/60">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-lg text-white shadow-lg shadow-blue-500/25 border border-blue-400/30">
-                SDM
-            </div>
+            <img src="/images/logo-muhammadiyah.png" alt="Logo Muhammadiyah" class="w-10 h-10 rounded-xl object-contain shadow-lg shadow-blue-500/25 border border-emerald-500/30 bg-emerald-950 p-0.5">
             <div>
                 <div class="font-bold text-sm tracking-tight text-white flex items-center gap-2">
                     <span>PDM Kota Yogyakarta</span>

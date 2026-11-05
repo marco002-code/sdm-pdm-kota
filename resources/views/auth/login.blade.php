@@ -6,6 +6,13 @@
     <title>Masuk ke Sistem • SIM-SDM PDM Kota Yogyakarta</title>
     <meta name="description" content="Portal Masuk Terpadu Sistem Informasi Manajemen Kepegawaian PDM Kota Yogyakarta">
 
+    <!-- Favicon & Touch Icons -->
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -80,9 +87,8 @@
 
             <!-- Logo & Brand Header -->
             <div class="text-center mb-7">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-amber-500 shadow-xl shadow-emerald-950/60 text-white text-2xl font-black mb-3 border border-amber-400/40">
-                    SDM
-                </div>
+                <img src="{{ asset('images/logo-muhammadiyah.png') }}" alt="Logo Muhammadiyah"
+                    class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain mx-auto mb-3 shadow-2xl shadow-emerald-950/80 border border-emerald-500/40 p-1.5 bg-emerald-950/70 hover:scale-105 transition duration-200">
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
                     <span>Sistem Informasi SDM</span>
                 </h1>
