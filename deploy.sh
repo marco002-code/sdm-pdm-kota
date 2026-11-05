@@ -203,9 +203,15 @@ $PHP_BIN artisan queue:restart || true
 # 10. Setel Hak Akses / Permissions Direktori
 # ------------------------------------------------------------------------------
 echo -e "${YELLOW}🛡️  [8/8] Memperbarui izin direktori (permissions)...${NC}"
-chmod -R 775 storage bootstrap/cache database 2>/dev/null || true
+find storage bootstrap/cache -type d -exec chmod 775 {} + 2>/dev/null || true
+find storage bootstrap/cache -type f -exec chmod 664 {} + 2>/dev/null || true
+chmod 775 database 2>/dev/null || true
 if [ -f database/database.sqlite ]; then
     chmod 664 database/database.sqlite 2>/dev/null || true
+fi
+chmod 755 artisan deploy.sh backup.sh 2>/dev/null || true
+if [ -f .env ]; then
+    chmod 600 .env 2>/dev/null || chmod 640 .env 2>/dev/null || true
 fi
 
 # ------------------------------------------------------------------------------
