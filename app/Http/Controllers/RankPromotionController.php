@@ -80,12 +80,12 @@ class RankPromotionController extends Controller
         // Ambil daftar pegawai yang dapat diajukan
         if ($user->isUnitLevel() && $user->unit_id) {
             $employees = Employee::where('unit_id', $user->unit_id)
-                ->where('is_active', true)
+                ->active()
                 ->orderBy('full_name')
                 ->get();
             $units = Unit::where('id', $user->unit_id)->get();
         } else {
-            $employees = Employee::where('is_active', true)
+            $employees = Employee::active()
                 ->orderBy('full_name')
                 ->get();
             $units = Unit::active()->orderBy('name')->get();

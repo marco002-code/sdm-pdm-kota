@@ -685,6 +685,11 @@ class AppTestCommand extends Command
         $this->assert('Admin Yayasan memiliki canManageMasterNpm()', $adminYayasan->canManageMasterNpm());
         $this->assert('Admin Yayasan memiliki canManageMutations()', $adminYayasan->canManageMutations());
 
+        $reqAdminYayasanVice = Request::create('/leadership/vice-headmasters', 'GET');
+        app()->instance('request', $reqAdminYayasanVice);
+        $resAdminYayasanVice = $kernel->handle($reqAdminYayasanVice);
+        $this->assert('Admin Yayasan / IT Support dapat mengakses Promosi Waka (HTTP 200)', $resAdminYayasanVice->getStatusCode() === 200);
+
         $isForbiddenAdminYayasanDel = false;
         try {
             $empController->destroy($sampleEmp);
@@ -893,6 +898,10 @@ class AppTestCommand extends Command
         $reqGuruUnit = Request::create('/units', 'GET');
         app()->instance('request', $reqGuruUnit);
         $this->assert('Pegawai dilarang mengakses Master Unit via URL (HTTP 403)', $kernel->handle($reqGuruUnit)->getStatusCode() === 403);
+
+        $reqGuruVice = Request::create('/leadership/vice-headmasters', 'GET');
+        app()->instance('request', $reqGuruVice);
+        $this->assert('Pegawai dilarang mengakses Promosi Waka via URL (HTTP 403)', $kernel->handle($reqGuruVice)->getStatusCode() === 403);
 
         $reqGuruMaint = Request::create('/maintenance', 'GET');
         app()->instance('request', $reqGuruMaint);

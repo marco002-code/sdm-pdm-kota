@@ -122,10 +122,10 @@
                     @forelse($nominations as $nom)
                         <tr class="hover:bg-slate-50/60 transition">
                             <td class="py-3 px-4">
-                                <div class="font-bold text-slate-800 text-sm">{{ $nom->employee ? $nom->employee->full_name : '-' }}</div>
+                                <div class="font-bold text-slate-800 text-sm">{{ $nom->employee?->full_name ?? '-' }}</div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
-                                    NPM: <span class="font-mono font-medium text-amber-700">{{ $nom->employee->npm ?? '-' }}</span> • 
-                                    NBM: <span class="font-mono font-medium">{{ $nom->employee->nbm ?? '-' }}</span>
+                                    NPM: <span class="font-mono font-medium text-amber-700">{{ $nom->employee?->npm ?? '-' }}</span> • 
+                                    NBM: <span class="font-mono font-medium">{{ $nom->employee?->nbm ?? '-' }}</span>
                                 </div>
                             </td>
                             <td class="py-3 px-4 font-semibold text-slate-700">

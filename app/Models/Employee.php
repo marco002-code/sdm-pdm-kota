@@ -235,6 +235,11 @@ class Employee extends Model
         return $query->where('status', self::STATUS_ACTIVE);
     }
 
+    public function scopeIsActive($query, $value = true)
+    {
+        return $value ? $query->where('status', self::STATUS_ACTIVE) : $query->where('status', '!=', self::STATUS_ACTIVE);
+    }
+
     public function scopeRetired($query)
     {
         return $query->where('status', self::STATUS_RETIRED);

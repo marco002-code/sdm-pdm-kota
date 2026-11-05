@@ -63,11 +63,12 @@ class LeadershipController extends Controller
         $candidates = $selection->candidates()->orderBy('total_score', 'desc')->get();
 
         // Pegawai yang bisa dicalonkan
-        $eligibleEmployees = Employee::where('is_active', true)
+        $eligibleEmployees = Employee::active()
             ->whereIn('employee_type', ['GTY', 'guru'])
             ->when($selection->unit_id, function($q) use ($selection) {
                 $q->where('unit_id', $selection->unit_id);
             })
+            ->with('unit')
             ->orderBy('full_name')
             ->get();
 
@@ -162,12 +163,19 @@ class LeadershipController extends Controller
 
         $units = Unit::active()->orderBy('name')->get();
 
-        // Pegawai untuk form usulan Waka
+        // Pegawai untuk form usulan Waka (Eager load unit agar efisien dan bebas N+1)
         $user = auth()->user();
         if ($user->isUnitLevel() && $user->unit_id) {
-            $eligibleEmployees = Employee::where('unit_id', $user->unit_id)->where('is_active', true)->orderBy('full_name')->get();
+            $eligibleEmployees = Employee::where('unit_id', $user->unit_id)
+                ->active()
+                ->with('unit')
+                ->orderBy('full_name')
+                ->get();
         } else {
-            $eligibleEmployees = Employee::where('is_active', true)->orderBy('full_name')->get();
+            $eligibleEmployees = Employee::active()
+                ->with('unit')
+                ->orderBy('full_name')
+                ->get();
         }
 
         return view('leadership.vice_headmasters', compact('nominations', 'counts', 'units', 'eligibleEmployees'));
